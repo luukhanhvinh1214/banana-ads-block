@@ -1,0 +1,151 @@
+# Nguồn của rules/ads.json — bộ lọc bật sẵn.
+# Mỗi dòng là một urlFilter của declarativeNetRequest, cú pháp giống EasyList:
+#   ||domain^   khớp tên miền và mọi tên miền con
+#   *           ký tự đại diện
+# Dòng trống và dòng bắt đầu bằng # bị bỏ qua.
+#
+# Sửa xong phải chạy: node tools/gen_rules.js
+
+# ===== Google / DoubleClick =====
+||doubleclick.net^
+||googlesyndication.com^
+||googleadservices.com^
+||googletagservices.com^
+||2mdn.net^
+||adservice.google.com^
+||ad-delivery.net^
+
+# ===== YouTube: đường đo đếm và xin quảng cáo =====
+# Trình phát nằm cùng tên miền với nội dung nên chỉ chặn được theo đường dẫn.
+# Việc cắt quảng cáo thật sự do src/ba_prune.js làm, đây chỉ là lớp phụ.
+||youtube.com/api/stats/ads
+||youtube.com/pagead/
+||youtube.com/ptracking
+||youtube.com/get_midroll_
+||googlevideo.com/videoplayback?*&oad
+||googlevideo.com/initplayback?*&oad
+
+# ===== Sàn đấu giá và mạng quảng cáo lớn =====
+||adnxs.com^
+||adnxs-simple.com^
+||amazon-adsystem.com^
+||criteo.com^
+||criteo.net^
+||pubmatic.com^
+||rubiconproject.com^
+||openx.net^
+||openxcdn.net^
+||casalemedia.com^
+||smartadserver.com^
+||sascdn.com^
+||adform.net^
+||adformdsp.net^
+||3lift.com^
+||33across.com^
+||lijit.com^
+||sonobi.com^
+||contextweb.com^
+||conversantmedia.com^
+||improvedigital.com^
+||indexww.com^
+||bidswitch.net^
+||districtm.io^
+||onetag-sys.com^
+||emxdgt.com^
+||adkernel.com^
+||admixer.net^
+||adsrvr.org^
+||mathtag.com^
+||mediamath.com^
+||smaato.net^
+||smartyads.com^
+||yieldlab.net^
+||yieldmo.com^
+||sitescout.com^
+||simpli.fi^
+||servebom.com^
+||bidr.io^
+||smilewanted.com^
+||richaudience.com^
+||adyoulike.com^
+||seedtag.com^
+||kueezrtb.com^
+||gammaplatform.com^
+||adelement.com^
+||netmng.com^
+||omnitagjs.com^
+||onaudience.com^
+||ipredictive.com^
+||adsymptotic.com^
+||btloader.com^
+||servenobid.com^
+
+# ===== Quảng cáo nội dung gợi ý =====
+||taboola.com^
+||taboolasyndication.com^
+||outbrain.com^
+||outbrainimg.com^
+||zemanta.com^
+||revcontent.com^
+||mgid.com^
+||dable.io^
+||nativo.com^
+||adroll.com^
+||adthrive.com^
+
+# ===== Quảng cáo video =====
+||teads.tv^
+||sharethrough.com^
+||spotxchange.com^
+||spotx.tv^
+||springserve.com^
+||unrulymedia.com^
+||stickyadstv.com^
+||tremorhub.com^
+||innovid.com^
+||vidazoo.com^
+||videoamp.com^
+||vidoomy.com^
+||nativeroll.tv^
+||loopme.me^
+||gumgum.com^
+||media.net^
+
+# ===== Popup, popunder, quảng cáo người lớn =====
+||popads.net^
+||popcash.net^
+||propellerads.com^
+||propellerpops.com^
+||adsterra.com^
+||exoclick.com^
+||exosrv.com^
+||juicyads.com^
+||trafficjunky.net^
+||adcash.com^
+||hilltopads.net^
+||zedo.com^
+||adition.com^
+
+# ===== Kiểm định và đo lường hiển thị quảng cáo =====
+||moatads.com^
+||adsafeprotected.com^
+||doubleverify.com^
+||serving-sys.com^
+||flashtalking.com^
+
+# ===== Quảng cáo trong ứng dụng di động =====
+||inmobi.com^
+||applovin.com^
+||adcolony.com^
+||chartboost.com^
+||vungle.com^
+||mobfox.com^
+
+# ===== Mạng quảng cáo Việt Nam =====
+||admicro.vn^
+||eclick.vn^
+||adtima.vn^
+||ants.vn^
+||novanet.vn^
+||adsplay.net^
+||media1.admicro.vn^

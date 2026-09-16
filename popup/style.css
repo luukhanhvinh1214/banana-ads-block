@@ -1,0 +1,431 @@
+/* Cùng bố cục với popup của Message Recovery, đổi tông sang vàng chuối */
+:root {
+  --ink: #2a2313;
+  --ink-soft: #4a4130;
+  --accent: #b8860b;
+  --accent-strong: #8a6508;
+  --peel: #f7d154;
+  --surface: #ffffff;
+  --surface-alt: #fdf8e8;
+  --line: #e8dcb8;
+  --muted: #7a7057;
+  --ok: #2f7d32;
+  --warn-bg: #fff4e5;
+  --warn-fg: #9a4b00;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink: #f1e9d2;
+    --ink-soft: #ded3b6;
+    --accent: #e8c14a;
+    --accent-strong: #f3d878;
+    --peel: #6b5a1f;
+    --surface: #17150f;
+    --surface-alt: #221e14;
+    --line: #3a3323;
+    --muted: #a09578;
+    --ok: #7bc47f;
+    --warn-bg: #2a2011;
+    --warn-fg: #fbbf24;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  width: 380px;
+  margin: 0;
+  padding: 0 0 16px;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+/* ===== Header thương hiệu LKV ===== */
+.brand {
+  background: linear-gradient(135deg, #f7d154, #fdf8e8 45%, #f0c419 75%, #e0a800);
+  padding: 18px 16px 16px;
+  text-align: center;
+  border-bottom: 1px solid var(--line);
+}
+
+.brand img {
+  width: 96px;
+  height: auto;
+  display: block;
+  margin: 0 auto 6px;
+}
+
+.brand .name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #2a2313;
+  letter-spacing: 0.2px;
+}
+
+.brand .role {
+  font-size: 11px;
+  color: #4a4130;
+  text-transform: uppercase;
+  letter-spacing: 1.1px;
+  margin-top: 2px;
+}
+
+/* ===== Tên tiện ích ===== */
+.title {
+  padding: 14px 16px 0;
+  text-align: center;
+}
+
+.title h1 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.title .version {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.title .tagline {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+/* ===== Công tắc tổng ===== */
+.power {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 14px 16px 0;
+  padding: 11px 13px;
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  background: var(--surface-alt);
+}
+
+.power.off {
+  border-color: var(--line);
+}
+
+.power-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.power-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.power-state {
+  margin-top: 2px;
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--accent-strong);
+}
+
+.power.off .power-state {
+  color: var(--muted);
+}
+
+.switch {
+  flex: none;
+  width: 46px;
+  height: 26px;
+  padding: 3px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--accent);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.power.off .switch {
+  background: #a09578;
+}
+
+.switch .knob {
+  display: block;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  transform: translateX(20px);
+  transition: transform 0.15s;
+}
+
+.power.off .switch .knob {
+  transform: translateX(0);
+}
+
+/* ===== Trang hiện tại ===== */
+.site {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 16px 0;
+  padding: 9px 13px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.site.allowed {
+  border-color: var(--warn-fg);
+  background: var(--warn-bg);
+}
+
+.site-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.site-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--muted);
+}
+
+.site-host {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ghost {
+  flex: none;
+  padding: 6px 10px;
+  border: 1px solid var(--accent);
+  border-radius: 7px;
+  background: transparent;
+  color: var(--accent-strong);
+  font-size: 11.5px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.ghost:hover:not(:disabled) {
+  background: var(--surface-alt);
+}
+
+.ghost:disabled {
+  border-color: var(--line);
+  color: var(--muted);
+  cursor: default;
+}
+
+/* ===== Khối nội dung ===== */
+section {
+  padding: 0 16px;
+  margin-top: 16px;
+}
+
+h2 {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.9px;
+  color: var(--accent-strong);
+}
+
+p {
+  margin: 0 0 8px;
+}
+
+ol,
+ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+li {
+  margin-bottom: 5px;
+}
+
+/* ===== Thống kê ===== */
+.stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+}
+
+.stat {
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface-alt);
+  text-align: center;
+}
+
+.stat-num {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--accent-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.stats-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 7px;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font-size: 11.5px;
+  font-family: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* ===== Ô chọn lớp ===== */
+.opt {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+}
+
+.opt:last-of-type {
+  border-bottom: 0;
+}
+
+.opt input {
+  flex: none;
+  margin: 2px 0 0;
+  width: 15px;
+  height: 15px;
+  accent-color: var(--accent);
+}
+
+.opt input:disabled {
+  cursor: default;
+}
+
+.opt span {
+  display: block;
+  min-width: 0;
+}
+
+.opt b {
+  display: block;
+  font-size: 12.5px;
+  color: var(--ink);
+}
+
+.opt i {
+  display: block;
+  font-style: normal;
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+.note {
+  background: var(--warn-bg);
+  color: var(--warn-fg);
+  border-left: 3px solid currentColor;
+  border-radius: 0 6px 6px 0;
+  padding: 9px 11px;
+  font-size: 12.5px;
+}
+
+code {
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-family: "Cascadia Code", Consolas, monospace;
+  font-size: 11.5px;
+  color: var(--accent-strong);
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* ===== Liên hệ ===== */
+.links {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+}
+
+.links a {
+  display: block;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface-alt);
+  font-weight: 600;
+  font-size: 12.5px;
+  text-align: center;
+  transition: border-color 0.15s, transform 0.15s;
+}
+
+.links a:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+  text-decoration: none;
+}
+
+.email {
+  margin-top: 8px;
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+/* ===== Chân trang ===== */
+footer {
+  margin: 18px 16px 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  text-align: center;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+footer .credit {
+  margin-top: 6px;
+}

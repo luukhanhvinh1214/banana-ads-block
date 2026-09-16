@@ -1,0 +1,68 @@
+# Nguồn của rules/trackers.json — bộ lọc TẮT sẵn, người dùng tự bật trong popup.
+# Cùng cú pháp với rules/ads.txt.
+#
+# Những tên miền ở đây không chỉ phục vụ quảng cáo: một số trang dùng chúng để
+# đăng nhập, phát video hoặc chạy thử nghiệm giao diện. Chặn hết thì gọn nhưng
+# dễ làm hỏng trang, nên bộ này mặc định tắt.
+#
+# Sửa xong phải chạy: node tools/gen_rules.js
+
+# ===== Đo lường truy cập =====
+||google-analytics.com^
+||googletagmanager.com^
+||analytics.google.com^
+||scorecardresearch.com^
+||quantserve.com^
+||quantcast.com^
+||hotjar.com^
+||hotjar.io^
+||mixpanel.com^
+||segment.com^
+||segment.io^
+||amplitude.com^
+||fullstory.com^
+||mouseflow.com^
+||smartlook.com^
+||clarity.ms^
+||statcounter.com^
+||chartbeat.com^
+||chartbeat.net^
+||parsely.com^
+||newrelic.com^
+||nr-data.net^
+||app-measurement.com^
+
+# ===== Hồ sơ người dùng và ghép định danh =====
+||demdex.net^
+||everesttech.net^
+||bluekai.com^
+||agkn.com^
+||crwdcntrl.net^
+||rlcdn.com^
+||tapad.com^
+||pippio.com^
+||turn.com^
+||adsrvr.org^
+||branch.io^
+||adjust.com^
+||appsflyer.com^
+||kochava.com^
+||braze.com^
+
+# ===== Nút chia sẻ và pixel mạng xã hội =====
+||connect.facebook.net^
+||analytics.tiktok.com^
+||ads-api.tiktok.com^
+||ads.linkedin.com^
+||px.ads.linkedin.com^
+||analytics.twitter.com^
+||static.ads-twitter.com^
+||addthis.com^
+||sharethis.com^
+
+# ===== Bộ SDK quảng cáo video =====
+# imasdk là bộ công cụ quảng cáo của Google mà rất nhiều trình phát video dùng.
+# Chặn nó diệt được quảng cáo tiền phát, nhưng trình phát nào chờ SDK trả lời
+# trước khi phát sẽ treo ở màn hình chờ. Đó là lý do nó nằm ở bộ tắt sẵn.
+||imasdk.googleapis.com^
+||googleads.g.doubleclick.net^

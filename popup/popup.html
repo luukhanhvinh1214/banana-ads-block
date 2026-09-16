@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="utf-8">
+    <title>Banana Ads Block — LKV</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <header class="brand">
+        <img src="../icons/logo-lkv.png" alt="Logo LKV">
+        <div class="name">Lưu Khánh Vinh</div>
+        <div class="role">AI &amp; Software Engineer</div>
+    </header>
+
+    <div class="title">
+        <h1>Banana Ads Block</h1>
+        <span class="version">v0.1.0</span>
+        <p class="tagline">Chặn quảng cáo, tự đóng popup chèn ngang và bỏ qua quảng cáo video.</p>
+    </div>
+
+    <div class="power" id="power">
+        <div class="power-text">
+            <div class="power-title">Trạng thái</div>
+            <div class="power-state" id="power-state">Đang bật</div>
+        </div>
+        <button type="button" id="power-toggle" class="switch" role="switch" aria-checked="true"
+            aria-label="Bật hoặc tắt tiện ích">
+            <span class="knob"></span>
+        </button>
+    </div>
+
+    <div class="site" id="site">
+        <div class="site-text">
+            <div class="site-title">Trang hiện tại</div>
+            <div class="site-host" id="site-host">—</div>
+        </div>
+        <button type="button" id="site-toggle" class="ghost">Bỏ qua trang này</button>
+    </div>
+
+    <section>
+        <h2>Đã chặn</h2>
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-num" id="stat-network">0</div>
+                <div class="stat-label">Yêu cầu mạng</div>
+            </div>
+            <div class="stat">
+                <div class="stat-num" id="stat-cosmetic">0</div>
+                <div class="stat-label">Khối trên trang</div>
+            </div>
+            <div class="stat">
+                <div class="stat-num" id="stat-popup">0</div>
+                <div class="stat-label">Popup chèn ngang</div>
+            </div>
+            <div class="stat">
+                <div class="stat-num" id="stat-video">0</div>
+                <div class="stat-label">Quảng cáo video</div>
+            </div>
+        </div>
+        <div class="stats-foot">
+            <span id="tab-hits">Tab này: 0</span>
+            <button type="button" id="reset-stats" class="link">Đặt lại</button>
+        </div>
+    </section>
+
+    <section>
+        <h2>Các lớp chặn</h2>
+        <label class="opt">
+            <input type="checkbox" id="opt-cosmetic" checked>
+            <span>
+                <b>Dọn khối quảng cáo</b>
+                <i>Ẩn banner và khung rỗng còn sót lại sau khi chặn ở tầng mạng.</i>
+            </span>
+        </label>
+        <label class="opt">
+            <input type="checkbox" id="opt-popup" checked>
+            <span>
+                <b>Đóng popup chèn ngang</b>
+                <i>Gỡ lớp phủ kín màn hình, mở lại thanh cuộn bị khoá.</i>
+            </span>
+        </label>
+        <label class="opt">
+            <input type="checkbox" id="opt-video" checked>
+            <span>
+                <b>Bỏ qua quảng cáo video</b>
+                <i>Bấm nút bỏ qua, không có nút thì tua nhanh qua đoạn quảng cáo.</i>
+            </span>
+        </label>
+        <label class="opt">
+            <input type="checkbox" id="opt-trackers">
+            <span>
+                <b>Chặn thêm mã theo dõi</b>
+                <i>Mạnh tay hơn. Một số trang có thể đăng nhập lỗi hoặc không phát được video.</i>
+            </span>
+        </label>
+    </section>
+
+    <section>
+        <h2>Cách hoạt động</h2>
+        <ol>
+            <li><b>Tầng mạng</b> — chặn thẳng yêu cầu tới các máy chủ quảng cáo, trước khi trình duyệt tải về.</li>
+            <li><b>Cắt dữ liệu YouTube</b> — xoá lịch chiếu quảng cáo khỏi phản hồi của trình phát, nên không có
+                quảng cáo nào được xếp lịch để mà chiếu.</li>
+            <li><b>Dọn trang</b> — ẩn phần vỏ còn lại và đóng lớp phủ chèn ngang.</li>
+            <li><b>Lưới an toàn</b> — quảng cáo nào lọt hết ba lớp trên thì bị bấm bỏ qua hoặc tua nhanh.</li>
+        </ol>
+    </section>
+
+    <section>
+        <h2>Lưu ý</h2>
+        <p class="note">
+            Không có bộ chặn nào đúng 100%. YouTube đang thử ghép quảng cáo thẳng vào luồng video từ máy chủ —
+            khi đó không còn yêu cầu mạng nào để chặn, tiện ích sẽ chuyển sang <b>tua nhanh</b>.
+        </p>
+        <ul style="margin-top:10px">
+            <li>Trang nào hiển thị sai thì bấm <b>Bỏ qua trang này</b> rồi tải lại — chỉ trang đó được tha.</li>
+            <li>Mọi thứ chạy <b>trên máy bạn</b>. Không có máy chủ, không gửi lịch sử duyệt web đi đâu.</li>
+            <li>Đổi cài đặt xong nên <b>tải lại trang</b> để áp dụng đầy đủ.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Kiểm tra nhanh</h2>
+        <p>Mở DevTools (<code>F12</code>) trên tab YouTube và gõ:</p>
+        <ul>
+            <li><code>BAB.stats()</code> — số nhánh quảng cáo đã cắt</li>
+            <li><code>BAB.hooked()</code> — các điểm đã chen được vào</li>
+            <li><code>BAB.debug(true)</code> — bật nhật ký ra Console</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Liên hệ</h2>
+        <div class="links">
+            <a href="https://github.com/luukhanhvinh1214" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <a href="https://www.linkedin.com/in/luukhanhvinh1214" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+            <a href="https://www.facebook.com/saku.kisaki.73" target="_blank" rel="noopener noreferrer">Facebook</a>
+            <a href="https://www.instagram.com/lukhnhvinh" target="_blank" rel="noopener noreferrer">Instagram</a>
+        </div>
+        <div class="email">luukhanhvinh1214@gmail.com</div>
+    </section>
+
+    <footer>
+        © 2026 Lưu Khánh Vinh.
+        <div class="credit">
+            Danh sách lọc và cách chặn tham khảo từ
+            <a href="https://github.com/gorhill/uBlock" target="_blank" rel="noopener noreferrer">uBlock Origin</a>
+            và <a href="https://easylist.to" target="_blank" rel="noopener noreferrer">EasyList</a>.
+        </div>
+    </footer>
+
+    <script src="popup.js"></script>
+</body>
+
+</html>

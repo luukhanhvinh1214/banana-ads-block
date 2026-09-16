@@ -1,0 +1,66 @@
+{
+  "name": "Banana Ads Block",
+  "description": "Chặn quảng cáo, tự đóng popup và bỏ qua quảng cáo video",
+  "version": "0.1.0",
+  "manifest_version": 3,
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_title": "Banana Ads Block",
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "24": "icons/icon24.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "permissions": [
+    "storage",
+    "declarativeNetRequest",
+    "declarativeNetRequestFeedback"
+  ],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "ads",
+        "enabled": true,
+        "path": "rules/ads.json"
+      },
+      {
+        "id": "trackers",
+        "enabled": false,
+        "path": "rules/trackers.json"
+      }
+    ]
+  },
+  "content_scripts": [
+    {
+      "js": ["./src/ba_core.js", "./src/ba_prune.js", "./src/ba_boot.js"],
+      "matches": ["*://*.youtube.com/*", "*://*.youtube-nocookie.com/*"],
+      "run_at": "document_start",
+      "world": "MAIN",
+      "all_frames": true
+    },
+    {
+      "js": [
+        "./content.js",
+        "./src/ba_cosmetic.js",
+        "./src/ba_popup.js",
+        "./src/ba_watchdog.js"
+      ],
+      "matches": ["<all_urls>"],
+      "run_at": "document_start",
+      "all_frames": true
+    }
+  ]
+}
