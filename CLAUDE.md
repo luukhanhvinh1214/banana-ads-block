@@ -176,8 +176,26 @@ chạy xong. Các cỡ nhỏ (16, 24, 32, 48) chỉ lấy dải biểu tượng 
 logo; cỡ 128 lấy nguyên logo. Thu cả phần chữ xuống 16px thì thành một vệt xám
 không đọc được. Đổi logo thì viết lại script sinh, dùng xong xoá đi.
 
+### Đánh số phiên bản
+
+Dạng `đầu.giữa.cuối`. Mỗi lần sửa chỉ được tăng MỘT nấc, và chọn nấc nào là
+theo bản chất của thay đổi:
+
+- **Sửa lỗi** — tăng số cuối: `0.0.1` thành `0.0.2`. Vá một lỗi, chỉnh một
+  ngưỡng, bổ sung danh sách lọc, sửa tài liệu. Số cuối không giới hạn, cứ tăng
+  mãi cũng được.
+- **Đổi logic lớn** — tăng số giữa và đưa số cuối về 0: `0.1.0` thành `0.2.0`.
+  Thêm một lớp chặn, đổi cách nhận quảng cáo, đổi luồng dữ liệu giữa các lớp.
+- **Số giữa tối đa là 9.** Đang ở `0.9.x` mà lại có một thay đổi lớn nữa thì
+  tăng số đầu và đưa hai số sau về 0: `0.9.4` thành `1.0.0`.
+
+Phân vân giữa hai nấc thì hỏi: người đang dùng bản cũ có cần đọc lại phần "Cách
+hoạt động" trong popup không? Cần thì đó là thay đổi lớn.
+
 Số phiên bản xuất hiện ở bốn nơi, phải khớp nhau: `manifest.json`,
 `src/ba_core.js` (`VERSION`), `content.js` (`VERSION`), `popup/popup.html`.
+Sửa một nơi mà quên ba nơi kia thì không có gì báo lỗi — popup vẫn hiện số cũ
+trong khi Chrome đã cài bản mới.
 
 ## Lệnh
 
