@@ -13,11 +13,14 @@ build/
 # dịch của rules/*.json. Không phải mã nguồn, và sẽ khác nhau theo từng máy.
 _metadata/
 
-# Công cụ chỉ dùng khi phát triển, không thuộc phần đóng gói extension.
-# .mcp.json trỏ tới mcp-server/, bỏ theo luôn cho khỏi trỏ vào chỗ trống.
+# Công cụ và ghi chú chỉ dùng khi phát triển, không thuộc phần đóng gói
+# extension. .mcp.json trỏ tới mcp-server/, bỏ theo luôn cho khỏi trỏ vào chỗ
+# trống. CLAUDE.md giữ trên máy, không đẩy lên.
 tools/
 mcp-server/
+test/
 .mcp.json
+CLAUDE.md
 
 # Logs
 *.log
