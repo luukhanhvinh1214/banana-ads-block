@@ -12,7 +12,7 @@
   if (window.__BAB__) return;
 
   const NS = {
-    VERSION: "0.2.0",
+    VERSION: "0.3.0",
 
     // ISOLATED world ghi đè ngay khi đọc xong chrome.storage. Mặc định bật để
     // không bỏ lọt quảng cáo trong vài mili giây chờ storage trả lời.
@@ -48,6 +48,19 @@
       "inFeedAdLayoutRenderer",
       "adsEngagementPanelContentRenderer",
     ],
+
+    // Tuỳ chọn do popup đặt, ISOLATED world chuyển xuống. Mặc định bật hết để
+    // không bỏ lọt trong vài mili giây chờ storage trả lời.
+    opts: { popunder: true },
+
+    // Cùng một trang web hay không. So thẳng chuỗi hostname là sai: trang nằm
+    // ở "www.example.com" còn liên kết nội bộ trỏ tới "example.com".
+    sameSite(host) {
+      if (!host) return true;
+      const a = String(host).replace(/^www\./, "").toLowerCase();
+      const b = location.hostname.replace(/^www\./, "").toLowerCase();
+      return a === b || a.endsWith("." + b) || b.endsWith("." + a);
+    },
 
     log(...args) {
       if (!NS.debug) return;

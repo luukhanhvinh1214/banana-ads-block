@@ -16,7 +16,7 @@
 
     <div class="title">
         <h1>Banana Ads Block</h1>
-        <span class="version">v0.2.0</span>
+        <span class="version">v0.3.0</span>
         <p class="tagline">Chặn quảng cáo, tự đóng popup chèn ngang và bỏ qua quảng cáo video.</p>
     </div>
 
@@ -90,6 +90,14 @@
             </span>
         </label>
         <label class="opt">
+            <input type="checkbox" id="opt-popunder" checked>
+            <span>
+                <b>Chặn mở tab quảng cáo</b>
+                <i>Ngăn trang mở tab mới khi bạn bấm vào chỗ không phải liên kết. Nút đăng nhập bằng Google,
+                    nút chia sẻ và cổng thanh toán vẫn mở bình thường.</i>
+            </span>
+        </label>
+        <label class="opt">
             <input type="checkbox" id="opt-video" checked>
             <span>
                 <b>Bỏ qua quảng cáo video</b>
@@ -111,8 +119,9 @@
             <li><b>Tầng mạng</b> — chặn thẳng yêu cầu tới các máy chủ quảng cáo, trước khi trình duyệt tải về.</li>
             <li><b>Cắt dữ liệu YouTube</b> — xoá lịch chiếu quảng cáo khỏi phản hồi của trình phát, nên không có
                 quảng cáo nào được xếp lịch để mà chiếu.</li>
-            <li><b>Dọn trang</b> — ẩn phần vỏ còn lại và đóng lớp phủ chèn ngang.</li>
-            <li><b>Lưới an toàn</b> — quảng cáo nào lọt hết ba lớp trên thì bị bấm bỏ qua hoặc tua nhanh.</li>
+            <li><b>Chống bị dò</b> — không để trang nhận ra bạn đang chặn quảng cáo, nên nó không khoá nội dung.</li>
+            <li><b>Dọn trang</b> — ẩn phần vỏ còn lại, đóng lớp phủ chèn ngang, chặn tab quảng cáo tự mở.</li>
+            <li><b>Lưới an toàn</b> — quảng cáo nào lọt hết các lớp trên thì bị bấm bỏ qua hoặc tua nhanh.</li>
         </ol>
     </section>
 
@@ -131,10 +140,11 @@
 
     <section>
         <h2>Kiểm tra nhanh</h2>
-        <p>Mở DevTools (<code>F12</code>) trên tab YouTube và gõ:</p>
+        <p>Mở DevTools (<code>F12</code>) trên trang bất kỳ và gõ:</p>
         <ul>
-            <li><code>BAB.stats()</code> — số nhánh quảng cáo đã cắt</li>
+            <li><code>BAB.stats()</code> — số nhánh quảng cáo đã cắt, số tab quảng cáo đã chặn</li>
             <li><code>BAB.hooked()</code> — các điểm đã chen được vào</li>
+            <li><code>BAB.shield()</code> — các lớp chống dò đang đặt</li>
             <li><code>BAB.debug(true)</code> — bật nhật ký ra Console</li>
         </ul>
     </section>

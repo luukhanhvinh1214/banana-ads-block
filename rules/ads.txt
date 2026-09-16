@@ -127,6 +127,25 @@
 ||gumgum.com^
 ||media.net^
 
+# ===== Popunder: dấu vết theo ĐƯỜNG DẪN =====
+# Mạng popunder đổi tên miền liên tục (đo được trên 1phim30.com và
+# truyenqqko.com: cheeseoverlordsaline.com, avalanchetremorunfilled.com,
+# indictpuker.qpon...), nên liệt kê tên miền là đuổi theo đuôi. Đường dẫn thì
+# đứng yên: afu.php và apu.php là chữ ký của PopAds, còn nguyên qua mọi lần
+# đổi tên miền.
+/afu.php
+/apu.php
+/pfe/current/tag.min.js
+
+# ===== Popunder: hạ tầng cố định =====
+# Phần không đổi tên: máy chủ phát script và đầu mối đồng bộ.
+||073m.com^
+||pncloudfl.com^
+||cdncloudsw.com^
+||coosync.com^
+||ywopromo.com^
+||mplmncb.com^
+
 # ===== Popup, popunder, quảng cáo người lớn =====
 ||popads.net^
 ||popcash.net^

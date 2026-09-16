@@ -70,6 +70,27 @@ giờ được trả về. Mọi tệp trong `surrogates/` phải có mặt tron
 xếp cả việc dựng bố cục vào hàng đợi đó; bỏ bước chạy nốt là phần nội dung bình
 thường của trang cũng đứng im.
 
+### Chặn popunder
+
+`src/ba_shield.js` chặn loại quảng cáo mở hẳn một tab mới khi người dùng bấm
+vào bất cứ đâu. Điều kiện chặn có ba vế và phải giữ đủ cả ba, vì chặn
+`window.open` không điều kiện là hỏng đăng nhập bằng Google, hỏng nút chia sẻ,
+hỏng cổng thanh toán:
+
+1. đang trong một cú bấm mà chỗ bấm không phải liên kết hay nút bấm
+2. không truyền tham số cửa sổ (hộp thoại thật luôn kèm `width=`, `height=`)
+3. đích nằm ở tên miền khác
+
+Vá `window.open` của realm hiện tại là CHƯA ĐỦ. Đo trên 1phim30.com: một bộ ghi
+đặt trước mọi script của trang vẫn thấy 0 lần gọi `window.open` trong khi 7 tab
+quảng cáo vẫn mở. Cách chúng né là tạo một iframe rỗng rồi lấy `window.open`
+nguyên bản từ realm của iframe đó — realm mới có bộ hàm dựng sẵn riêng, không
+dính bản vá của realm cha. Nên phải vá cả accessor `contentWindow` và
+`contentDocument` của `HTMLIFrameElement`, chặn ngay lúc trang với tay tới.
+
+Đừng gỡ `patchAccessor`. Không có nó thì hai lớp còn lại vẫn chạy, số đếm vẫn
+nhảy, mà tab quảng cáo vẫn mở như thường.
+
 ### Nhận quảng cáo theo hình dạng
 
 `src/ba_popup.js` (`isAdBanner`) và `src/ba_cosmetic.js` (`isBannerAd`) nhận
@@ -80,6 +101,27 @@ và KHÔNG có chữ. Điều kiện "không có chữ" là thứ tách nó kh�
 So tên miền phải qua `CS.sameSite()`, không so thẳng `location.hostname`. Đo
 trên animevietsub.zip: trang nằm ở `www.animevietsub.zip` còn mọi liên kết nội
 bộ trỏ tới `animevietsub.zip`, so chuỗi thì cả trang thành liên kết ngoài.
+
+Đo kích thước banner phải qua `linkBox()`, không dùng thẳng
+`getBoundingClientRect()` của thẻ `<a>`. Thẻ `<a>` mặc định là inline; bọc
+quanh một `<img>` hiển thị block thì hộp của nó xẹp lại còn đúng chiều cao dòng
+chữ. Đo trên truyenqqko.com: banner 728x90 cho ra hộp 728x18 và rớt dưới mọi
+ngưỡng chiều cao. `linkBox()` lấy hộp của tấm ảnh lớn nhất bên trong.
+
+Ngưỡng kích thước là cạnh nhỏ nhất 50px và diện tích 20000. Đừng nâng cạnh nhỏ
+nhất lên: banner dọc bên lề chỉ rộng 135px và dải ngang mỏng chỉ cao 50px.
+
+`BADGE_HOSTS` loại huy hiệu đánh giá và nút tải ứng dụng ra khỏi phần nhận theo
+hình dạng. Chúng có đúng hình dạng quảng cáo nên phải loại theo tên miền, không
+loại được bằng kích thước: huy hiệu Product Hunt trên remove.bg là 242x108 =
+26136, còn banner quảng cáo dọc trên truyenqqko.com là 135x270 = 36450. Kê một
+ngưỡng vào giữa hai số đó là vừa ẩn oan vừa bỏ lọt.
+
+Khung quảng cáo của mạng đổi tên miền liên tục thì nhận bằng `IAB_SIZES`: một
+iframe của bên thứ ba có kích thước đúng bằng một cỡ quảng cáo chuẩn thì gần
+như chắc chắn là quảng cáo. `EMBED_OK` chừa lại các nhúng thật (video, bản đồ,
+biểu mẫu thanh toán, captcha) — thêm mạng quảng cáo mới thì đừng động vào danh
+sách đó.
 
 Phần này bật tắt riêng bằng tuỳ chọn `banners` vì nó đoán nhiều nhất.
 

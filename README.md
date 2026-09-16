@@ -31,6 +31,7 @@ Năm lớp độc lập, lớp sau đỡ cho lớp trước:
 | 2. Cắt dữ liệu | `src/ba_prune.js` | Xoá lịch chiếu quảng cáo khỏi phản hồi trình phát YouTube |
 | 3. Chống bị dò | `src/ba_shield.js`, `surrogates/` | Không cho trang nhận ra đang bị chặn |
 | 4. Dọn trang | `src/ba_cosmetic.js`, `src/ba_popup.js` | Ẩn khối quảng cáo, đóng lớp phủ, mở lại thanh cuộn |
+| 4b. Chặn popunder | `src/ba_shield.js` | Ngăn trang mở tab quảng cáo khi bấm vào chỗ bất kỳ |
 | 5. Lưới an toàn | `src/ba_watchdog.js` | Bấm nút bỏ qua, không có nút thì tắt tiếng và tua tới cuối |
 
 Lớp 2 là lớp quan trọng nhất với YouTube. Phản hồi `/youtubei/v1/player` mang
@@ -70,6 +71,19 @@ không kèm một chữ nào. Chính chỗ "không có chữ" tách nó khỏi b
 
 Đây là phần đoán nhiều nhất trong cả tiện ích, nên có công tắc riêng trong popup
 (**Ẩn banner ảnh quảng cáo**).
+
+### Tab quảng cáo tự mở khi bấm
+
+Nhiều trang phim và truyện mở hẳn một tab quảng cáo mỗi khi bạn bấm vào bất cứ
+đâu, kể cả chỗ không phải quảng cáo. Banana chặn việc đó, nhưng chỉ khi đủ ba
+điều kiện cùng lúc: bạn bấm vào chỗ **không phải liên kết hay nút**, lệnh mở
+**không kèm tham số kích thước cửa sổ**, và đích nằm ở **tên miền khác**. Nhờ
+vậy nút đăng nhập bằng Google, nút chia sẻ và cổng thanh toán vẫn mở bình
+thường — đã kiểm từng trường hợp một.
+
+Đáng chú ý: vá `window.open` thôi thì không đủ. Đo trên 1phim30.com, script
+quảng cáo tạo một iframe rỗng rồi lấy `window.open` nguyên bản từ đó để né bản
+vá. Banana chặn luôn cả đường ấy.
 
 ## Sử dụng
 

@@ -91,6 +91,13 @@
     '.advertisement',
     '.advertising-container',
     '[id^="M"][id*="ScriptRootC"]',
+    // Đo trên truyenqqko.com: mọi banner cờ bạc ở đó đều mang class
+    // "ads-banner" và nằm trong khối id "ad_info*". Có chữ "s" nên không khớp
+    // các mẫu "ad-" ở trên.
+    '[class*="ads-banner"]',
+    '[class^="ads-"]',
+    '[class*=" ads-"]',
+    '[id^="ad_info"]',
   ];
 
   const SELECTORS = HARD.concat(BAIT_PRONE.map((s) => s + HAS_REAL_AD));
@@ -123,6 +130,39 @@
     'admicro.vn',
     'eclick.vn',
     'adtima.vn',
+  ];
+
+  // Khung quảng cáo của các mạng đổi tên miền liên tục.
+  //
+  // Đo trên truyenqqko.com: iframe id "__clb-spot_2098132_fpt_1_container" trỏ
+  // về avalanchetremorunfilled.com, nằm chen giữa vùng đọc truyện; bấm nhầm
+  // vào là mở 7 tab. Tên miền sinh ngẫu nhiên nên không liệt kê được, nhưng
+  // tên id của khung thì theo quy ước cố định của mạng quảng cáo.
+  const AD_FRAME_ID = [
+    '[id*="clb-spot"]',
+    '[id^="google_ads_iframe"]',
+    '[id^="aswift_"]',
+    '[id^="ad-frame"]',
+    '[id^="adframe"]',
+  ].join(',');
+
+  // Kích thước chuẩn IAB. Một khung của bên thứ ba đúng bằng một trong các cỡ
+  // này thì gần như chắc chắn là quảng cáo: nhúng thật (video, bản đồ, biểu
+  // mẫu thanh toán) không bao giờ rơi đúng vào bảng cỡ quảng cáo.
+  const IAB_SIZES = [
+    [728, 90], [970, 90], [970, 250], [300, 250], [336, 280], [300, 600],
+    [160, 600], [120, 600], [320, 50], [320, 100], [468, 60], [234, 60],
+    [300, 100], [250, 250], [200, 200], [180, 150], [125, 125], [980, 120],
+  ];
+
+  // Bên thứ ba nhưng là nhúng thật, không được đụng vào.
+  const EMBED_OK = [
+    'youtube.com', 'youtube-nocookie.com', 'youtu.be', 'vimeo.com',
+    'dailymotion.com', 'soundcloud.com', 'spotify.com', 'twitch.tv',
+    'google.com', 'gstatic.com', 'googleapis.com', 'recaptcha.net',
+    'hcaptcha.com', 'cloudflare.com', 'facebook.com', 'instagram.com',
+    'twitter.com', 'x.com', 'disqus.com', 'stripe.com', 'paypal.com',
+    'codepen.io', 'jsfiddle.net', 'github.com', 'gitlab.com',
   ];
 
   const MARK = 'data-bab-hidden';
@@ -194,8 +234,61 @@
   // kiện quan trọng nhất — nó loại được liên kết thật trong bài viết, thẻ ảnh
   // minh hoạ có chú thích, và mục tin bài dẫn sang trang khác.
   const SPONSORED = /(^|\s)(nofollow|sponsored)(\s|$)/i;
-  const MIN_BANNER_W = 180;
-  const MIN_BANNER_H = 40;
+  // Ngưỡng đo trên truyenqqko.com: banner dọc bên lề chỉ rộng 135px, banner
+  // ngang trên đầu cao 90px. Cạnh nhỏ nhất để 50 cho lọt cả dải ngang mỏng
+  // kiểu 970x50; chặn dưới bằng diện tích thì logo đối tác cỡ 100x40 vẫn
+  // không dính.
+  const MIN_BANNER_SIDE = 50;
+  const MIN_BANNER_AREA = 20000;
+
+  // Huy hiệu đánh giá và nút tải ứng dụng. Chúng có đúng hình dạng của quảng
+  // cáo — ảnh, dẫn sang tên miền khác, không kèm chữ — nên phải loại theo tên.
+  //
+  // Không loại được bằng kích thước: đo trên remove.bg, huy hiệu Product Hunt
+  // là 242x108 = 26136, trong khi banner quảng cáo dọc trên truyenqqko.com là
+  // 135x270 = 36450. Hai con số quá gần nhau, kê ngưỡng vào giữa là vừa ẩn oan
+  // huy hiệu của trang khác vừa bỏ lọt quảng cáo.
+  const BADGE_HOSTS = [
+    'producthunt.com',
+    'trustpilot.com',
+    'g2.com',
+    'capterra.com',
+    'getapp.com',
+    'sourceforge.net',
+    'shields.io',
+    'badgen.net',
+    'w3.org',
+    'play.google.com',
+    'apps.apple.com',
+    'microsoft.com',
+  ];
+
+  const isBadgeHost = (host) => {
+    for (const b of BADGE_HOSTS) {
+      if (host === b || host.endsWith('.' + b)) return true;
+    }
+    return false;
+  };
+
+  // Kích thước thật của một liên kết ảnh.
+  //
+  // KHÔNG đo bằng getBoundingClientRect của chính thẻ <a>. Thẻ <a> mặc định là
+  // inline; bọc quanh một <img> hiển thị block thì hộp của nó xẹp lại còn
+  // đúng chiều cao dòng chữ. Đo trên truyenqqko.com: banner 728x90 cho ra hộp
+  // 728x18, rớt dưới mọi ngưỡng chiều cao. Lấy hộp của tấm ảnh lớn nhất bên
+  // trong mới ra con số đúng.
+  const linkBox = (a) => {
+    let best = a.getBoundingClientRect();
+    let area = best.width * best.height;
+    for (const img of a.querySelectorAll('img, picture, video')) {
+      const r = img.getBoundingClientRect();
+      if (r.width * r.height > area) {
+        best = r;
+        area = r.width * r.height;
+      }
+    }
+    return best;
+  };
 
   const isBannerAd = (a) => {
     let host;
@@ -206,7 +299,7 @@
     } catch (e) {
       return false;
     }
-    if (!host || CS.sameSite(host)) return false;
+    if (!host || CS.sameSite(host) || isBadgeHost(host)) return false;
 
     if (a.target !== '_blank' && !SPONSORED.test(a.getAttribute('rel') || '')) return false;
     if ((a.innerText || a.textContent || '').trim().length > 3) return false;
@@ -216,8 +309,38 @@
     // bộ khung của trang, không phải quảng cáo chèn vào.
     if (a.closest('nav, header')) return false;
 
-    const rect = a.getBoundingClientRect();
-    return rect.width >= MIN_BANNER_W && rect.height >= MIN_BANNER_H;
+    const rect = linkBox(a);
+    if (rect.width < MIN_BANNER_SIDE || rect.height < MIN_BANNER_SIDE) return false;
+    return rect.width * rect.height >= MIN_BANNER_AREA;
+  };
+
+  const embedAllowed = (host) => {
+    for (const ok of EMBED_OK) {
+      if (host === ok || host.endsWith('.' + ok)) return true;
+    }
+    return false;
+  };
+
+  // Khung của bên thứ ba có kích thước đúng bằng một cỡ quảng cáo chuẩn.
+  const isAdSizedFrame = (frame) => {
+    const src = frame.getAttribute('src') || frame.getAttribute('data-src');
+    if (!src) return false;
+
+    let host;
+    try {
+      const url = new URL(src, location.href);
+      if (url.protocol !== 'http:' && url.protocol !== 'https:') return false;
+      host = url.hostname;
+    } catch (e) {
+      return false;
+    }
+    if (CS.sameSite(host) || embedAllowed(host)) return false;
+
+    const rect = frame.getBoundingClientRect();
+    for (const [w, h] of IAB_SIZES) {
+      if (Math.abs(rect.width - w) <= 4 && Math.abs(rect.height - h) <= 4) return true;
+    }
+    return false;
   };
 
   const scan = (root) => {
@@ -226,7 +349,13 @@
 
     for (const frame of root.querySelectorAll('iframe[src], iframe[data-src]')) {
       if (frame.hasAttribute(MARK)) continue;
-      if (!isAdUrl(frame.getAttribute('src') || frame.getAttribute('data-src'))) continue;
+      const byHost = isAdUrl(frame.getAttribute('src') || frame.getAttribute('data-src'));
+      if (!byHost && !isAdSizedFrame(frame)) continue;
+      n += hideWrapper(frame);
+    }
+
+    for (const frame of root.querySelectorAll(AD_FRAME_ID)) {
+      if (frame.hasAttribute(MARK)) continue;
       n += hideWrapper(frame);
     }
 

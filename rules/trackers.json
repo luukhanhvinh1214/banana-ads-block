@@ -476,11 +476,51 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||imasdk.googleapis.com^"
+      "urlFilter": ".cfd^"
     }
   },
   {
     "id": 20048,
+    "priority": 1,
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": ".cyou^"
+    }
+  },
+  {
+    "id": 20049,
+    "priority": 1,
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": ".qpon^"
+    }
+  },
+  {
+    "id": 20050,
+    "priority": 1,
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": ".sbs^"
+    }
+  },
+  {
+    "id": 20051,
+    "priority": 1,
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||imasdk.googleapis.com^"
+    }
+  },
+  {
+    "id": 20052,
     "priority": 1,
     "action": {
       "type": "block"

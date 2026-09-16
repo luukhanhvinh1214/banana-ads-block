@@ -14,6 +14,11 @@
       NS.enabled = d.data !== false;
       NS.log("trạng thái:", NS.enabled ? "bật" : "tắt");
     }
+
+    if (d.op === "opts" && d.data) {
+      NS.opts = d.data;
+      NS.log("tuỳ chọn:", JSON.stringify(NS.opts));
+    }
   });
 
   // Hỏi ngay, vì ISOLATED world có thể đã đọc xong storage trước khi file này
@@ -22,7 +27,12 @@
 
   window.BAB = {
     version: NS.VERSION,
-    stats: () => ({ pruned: NS.pruned, enabled: NS.enabled }),
+    stats: () => ({
+      pruned: NS.pruned,
+      popBlocked: NS.popBlocked || 0,
+      enabled: NS.enabled,
+      opts: NS.opts,
+    }),
     hooked: () => NS.hooked.slice(),
     shield: () => (NS.shielded ? NS.shielded.slice() : []),
     debug: (on) => {

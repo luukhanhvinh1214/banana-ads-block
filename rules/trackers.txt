@@ -60,6 +60,19 @@
 ||addthis.com^
 ||sharethis.com^
 
+# ===== Quét cả tên miền cấp cao =====
+# Những đuôi này gần như chỉ thấy trong mạng quảng cáo dùng một lần rồi bỏ.
+# Đo trên 1phim30.com: indictpuker.qpon, duxmiro.qpon, hyphalambeerzep.cyou,
+# horf9xnjuw7r1mlwef2.cfd — tên máy chủ sinh ngẫu nhiên, đổi theo từng lượt
+# tải trang nên không thể liệt kê từng cái.
+#
+# Chặn nguyên một đuôi tên miền là nhát búa rất nặng. Để ở bộ tắt sẵn vì lỡ có
+# trang tử tế nào dùng thì oan cho họ.
+.cfd^
+.cyou^
+.qpon^
+.sbs^
+
 # ===== Bộ SDK quảng cáo video =====
 # imasdk là bộ công cụ quảng cáo của Google mà rất nhiều trình phát video dùng.
 # Chặn nó diệt được quảng cáo tiền phát, nhưng trình phát nào chờ SDK trả lời

@@ -18,13 +18,13 @@
   const listeners = [];
 
   const NS = {
-    VERSION: "0.2.0",
+    VERSION: "0.3.0",
 
     // Bật sẵn để không bỏ lọt quảng cáo trong lúc chờ service worker trả lời.
     // Nếu trang nằm trong danh sách bỏ qua, các lớp sẽ tự thu dọn ở lượt
     // apply() đầu tiên.
     active: true,
-    opts: { cosmetic: true, popup: true, video: true, banners: true },
+    opts: { cosmetic: true, popup: true, video: true, banners: true, popunder: true },
     host: location.hostname,
 
     // Lớp nào cần biết trạng thái đổi thì đăng ký ở đây. Gọi luôn một lần với
@@ -63,6 +63,7 @@
     NS.active = active !== false;
     if (opts) NS.opts = opts;
     NS.post("enabled", NS.active);
+    NS.post("opts", NS.opts);
     for (const fn of listeners) {
       try {
         fn(NS.active, NS.opts);
@@ -107,8 +108,14 @@
     if (!d || d.__bab !== true || d.from !== "main") return;
 
     // src/ba_boot.js hỏi trạng thái vì nó có thể nạp xong sau lượt apply đầu.
-    if (d.op === "hello") NS.post("enabled", NS.active);
+    if (d.op === "hello") {
+      NS.post("enabled", NS.active);
+      NS.post("opts", NS.opts);
+    }
     if (d.op === "pruned") NS.report("video", d.data);
+    // Popunder tính chung vào nhóm popup: với người dùng thì cả hai đều là
+    // "thứ tự nhảy ra mà tôi không bảo".
+    if (d.op === "popunder") NS.report("popup", d.data);
   });
 
   // ===== Nghe service worker =====

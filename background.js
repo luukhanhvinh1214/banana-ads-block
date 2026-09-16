@@ -15,6 +15,7 @@ const DEFAULT_OPTS = {
   popup: true,
   video: true,
   banners: true,
+  popunder: true,
   trackers: false,
 };
 const DEFAULT_STATS = { network: 0, cosmetic: 0, popup: 0, video: 0 };
