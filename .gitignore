@@ -1,0 +1,25 @@
+# Claude Code local config & bundled skills
+.claude/
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+*.zip
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
