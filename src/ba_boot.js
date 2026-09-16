@@ -24,6 +24,7 @@
     version: NS.VERSION,
     stats: () => ({ pruned: NS.pruned, enabled: NS.enabled }),
     hooked: () => NS.hooked.slice(),
+    shield: () => (NS.shielded ? NS.shielded.slice() : []),
     debug: (on) => {
       NS.debug = on !== false;
       return NS.debug;

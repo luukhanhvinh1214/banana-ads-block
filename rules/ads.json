@@ -1,52 +1,82 @@
 [
   {
     "id": 1000,
-    "priority": 1,
+    "priority": 2,
     "action": {
-      "type": "block"
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/adsbygoogle.js"
+      }
     },
     "condition": {
-      "urlFilter": "||doubleclick.net^"
+      "urlFilter": "||pagead2.googlesyndication.com/pagead/js/adsbygoogle.js",
+      "resourceTypes": [
+        "script"
+      ]
     }
   },
   {
     "id": 1001,
-    "priority": 1,
+    "priority": 2,
     "action": {
-      "type": "block"
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/gpt.js"
+      }
     },
     "condition": {
-      "urlFilter": "||googlesyndication.com^"
+      "urlFilter": "||securepubads.g.doubleclick.net/tag/js/gpt.js",
+      "resourceTypes": [
+        "script"
+      ]
     }
   },
   {
     "id": 1002,
-    "priority": 1,
+    "priority": 2,
     "action": {
-      "type": "block"
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/gpt.js"
+      }
     },
     "condition": {
-      "urlFilter": "||googleadservices.com^"
+      "urlFilter": "||googletagservices.com/tag/js/gpt.js",
+      "resourceTypes": [
+        "script"
+      ]
     }
   },
   {
     "id": 1003,
-    "priority": 1,
+    "priority": 2,
     "action": {
-      "type": "block"
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
     },
     "condition": {
-      "urlFilter": "||googletagservices.com^"
+      "urlFilter": "||pagead2.googlesyndication.com/pagead/show_ads.js",
+      "resourceTypes": [
+        "script"
+      ]
     }
   },
   {
     "id": 1004,
-    "priority": 1,
+    "priority": 2,
     "action": {
-      "type": "block"
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/surrogates/noop.js"
+      }
     },
     "condition": {
-      "urlFilter": "||2mdn.net^"
+      "urlFilter": "||pagead2.googlesyndication.com/pagead/managed/js/adsense",
+      "resourceTypes": [
+        "script"
+      ]
     }
   },
   {
@@ -56,7 +86,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||adservice.google.com^"
+      "urlFilter": "||doubleclick.net^"
     }
   },
   {
@@ -66,7 +96,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||ad-delivery.net^"
+      "urlFilter": "||googlesyndication.com^"
     }
   },
   {
@@ -76,7 +106,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||youtube.com/api/stats/ads"
+      "urlFilter": "||googleadservices.com^"
     }
   },
   {
@@ -86,7 +116,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||youtube.com/pagead/"
+      "urlFilter": "||googletagservices.com^"
     }
   },
   {
@@ -96,7 +126,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||youtube.com/ptracking"
+      "urlFilter": "||2mdn.net^"
     }
   },
   {
@@ -106,7 +136,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||youtube.com/get_midroll_"
+      "urlFilter": "||adservice.google.com^"
     }
   },
   {
@@ -116,7 +146,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||googlevideo.com/videoplayback?*&oad"
+      "urlFilter": "||ad-delivery.net^"
     }
   },
   {
@@ -126,7 +156,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||googlevideo.com/initplayback?*&oad"
+      "urlFilter": "||youtube.com/api/stats/ads"
     }
   },
   {
@@ -136,7 +166,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||adnxs.com^"
+      "urlFilter": "||youtube.com/pagead/"
     }
   },
   {
@@ -146,7 +176,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||adnxs-simple.com^"
+      "urlFilter": "||youtube.com/ptracking"
     }
   },
   {
@@ -156,7 +186,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||amazon-adsystem.com^"
+      "urlFilter": "||youtube.com/get_midroll_"
     }
   },
   {
@@ -166,7 +196,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||criteo.com^"
+      "urlFilter": "||googlevideo.com/videoplayback?*&oad"
     }
   },
   {
@@ -176,7 +206,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||criteo.net^"
+      "urlFilter": "||googlevideo.com/initplayback?*&oad"
     }
   },
   {
@@ -186,7 +216,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||pubmatic.com^"
+      "urlFilter": "||adnxs.com^"
     }
   },
   {
@@ -196,7 +226,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||rubiconproject.com^"
+      "urlFilter": "||adnxs-simple.com^"
     }
   },
   {
@@ -206,7 +236,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||openx.net^"
+      "urlFilter": "||amazon-adsystem.com^"
     }
   },
   {
@@ -216,7 +246,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||openxcdn.net^"
+      "urlFilter": "||criteo.com^"
     }
   },
   {
@@ -226,7 +256,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||casalemedia.com^"
+      "urlFilter": "||criteo.net^"
     }
   },
   {
@@ -236,7 +266,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||smartadserver.com^"
+      "urlFilter": "||pubmatic.com^"
     }
   },
   {
@@ -246,7 +276,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||sascdn.com^"
+      "urlFilter": "||rubiconproject.com^"
     }
   },
   {
@@ -256,7 +286,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||adform.net^"
+      "urlFilter": "||openx.net^"
     }
   },
   {
@@ -266,7 +296,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||adformdsp.net^"
+      "urlFilter": "||openxcdn.net^"
     }
   },
   {
@@ -276,7 +306,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||3lift.com^"
+      "urlFilter": "||casalemedia.com^"
     }
   },
   {
@@ -286,7 +316,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||33across.com^"
+      "urlFilter": "||smartadserver.com^"
     }
   },
   {
@@ -296,7 +326,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||lijit.com^"
+      "urlFilter": "||sascdn.com^"
     }
   },
   {
@@ -306,7 +336,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||sonobi.com^"
+      "urlFilter": "||adform.net^"
     }
   },
   {
@@ -316,7 +346,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||contextweb.com^"
+      "urlFilter": "||adformdsp.net^"
     }
   },
   {
@@ -326,7 +356,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||conversantmedia.com^"
+      "urlFilter": "||3lift.com^"
     }
   },
   {
@@ -336,7 +366,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||improvedigital.com^"
+      "urlFilter": "||33across.com^"
     }
   },
   {
@@ -346,7 +376,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||indexww.com^"
+      "urlFilter": "||lijit.com^"
     }
   },
   {
@@ -356,7 +386,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||bidswitch.net^"
+      "urlFilter": "||sonobi.com^"
     }
   },
   {
@@ -366,7 +396,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||districtm.io^"
+      "urlFilter": "||contextweb.com^"
     }
   },
   {
@@ -376,7 +406,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||onetag-sys.com^"
+      "urlFilter": "||conversantmedia.com^"
     }
   },
   {
@@ -386,7 +416,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||emxdgt.com^"
+      "urlFilter": "||improvedigital.com^"
     }
   },
   {
@@ -396,7 +426,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||adkernel.com^"
+      "urlFilter": "||indexww.com^"
     }
   },
   {
@@ -406,7 +436,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||admixer.net^"
+      "urlFilter": "||bidswitch.net^"
     }
   },
   {
@@ -416,7 +446,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||adsrvr.org^"
+      "urlFilter": "||districtm.io^"
     }
   },
   {
@@ -426,7 +456,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||mathtag.com^"
+      "urlFilter": "||onetag-sys.com^"
     }
   },
   {
@@ -436,7 +466,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||mediamath.com^"
+      "urlFilter": "||emxdgt.com^"
     }
   },
   {
@@ -446,7 +476,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||smaato.net^"
+      "urlFilter": "||adkernel.com^"
     }
   },
   {
@@ -456,7 +486,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||smartyads.com^"
+      "urlFilter": "||admixer.net^"
     }
   },
   {
@@ -466,7 +496,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||yieldlab.net^"
+      "urlFilter": "||adsrvr.org^"
     }
   },
   {
@@ -476,7 +506,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||yieldmo.com^"
+      "urlFilter": "||mathtag.com^"
     }
   },
   {
@@ -486,7 +516,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||sitescout.com^"
+      "urlFilter": "||mediamath.com^"
     }
   },
   {
@@ -496,7 +526,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||simpli.fi^"
+      "urlFilter": "||smaato.net^"
     }
   },
   {
@@ -506,7 +536,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||servebom.com^"
+      "urlFilter": "||smartyads.com^"
     }
   },
   {
@@ -516,7 +546,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||bidr.io^"
+      "urlFilter": "||yieldlab.net^"
     }
   },
   {
@@ -526,7 +556,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||smilewanted.com^"
+      "urlFilter": "||yieldmo.com^"
     }
   },
   {
@@ -536,7 +566,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||richaudience.com^"
+      "urlFilter": "||sitescout.com^"
     }
   },
   {
@@ -546,7 +576,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||adyoulike.com^"
+      "urlFilter": "||simpli.fi^"
     }
   },
   {
@@ -556,7 +586,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||seedtag.com^"
+      "urlFilter": "||servebom.com^"
     }
   },
   {
@@ -566,7 +596,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||kueezrtb.com^"
+      "urlFilter": "||bidr.io^"
     }
   },
   {
@@ -576,7 +606,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||gammaplatform.com^"
+      "urlFilter": "||smilewanted.com^"
     }
   },
   {
@@ -586,7 +616,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||adelement.com^"
+      "urlFilter": "||richaudience.com^"
     }
   },
   {
@@ -596,7 +626,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||netmng.com^"
+      "urlFilter": "||adyoulike.com^"
     }
   },
   {
@@ -606,7 +636,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||omnitagjs.com^"
+      "urlFilter": "||seedtag.com^"
     }
   },
   {
@@ -616,7 +646,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||onaudience.com^"
+      "urlFilter": "||kueezrtb.com^"
     }
   },
   {
@@ -626,7 +656,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||ipredictive.com^"
+      "urlFilter": "||gammaplatform.com^"
     }
   },
   {
@@ -636,7 +666,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||adsymptotic.com^"
+      "urlFilter": "||adelement.com^"
     }
   },
   {
@@ -646,7 +676,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||btloader.com^"
+      "urlFilter": "||netmng.com^"
     }
   },
   {
@@ -656,7 +686,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||servenobid.com^"
+      "urlFilter": "||omnitagjs.com^"
     }
   },
   {
@@ -666,7 +696,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||taboola.com^"
+      "urlFilter": "||onaudience.com^"
     }
   },
   {
@@ -676,7 +706,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||taboolasyndication.com^"
+      "urlFilter": "||ipredictive.com^"
     }
   },
   {
@@ -686,7 +716,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||outbrain.com^"
+      "urlFilter": "||adsymptotic.com^"
     }
   },
   {
@@ -696,7 +726,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||outbrainimg.com^"
+      "urlFilter": "||btloader.com^"
     }
   },
   {
@@ -706,7 +736,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||zemanta.com^"
+      "urlFilter": "||servenobid.com^"
     }
   },
   {
@@ -716,7 +746,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||revcontent.com^"
+      "urlFilter": "||taboola.com^"
     }
   },
   {
@@ -726,7 +756,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||mgid.com^"
+      "urlFilter": "||taboolasyndication.com^"
     }
   },
   {
@@ -736,7 +766,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||dable.io^"
+      "urlFilter": "||outbrain.com^"
     }
   },
   {
@@ -746,7 +776,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||nativo.com^"
+      "urlFilter": "||outbrainimg.com^"
     }
   },
   {
@@ -756,7 +786,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||adroll.com^"
+      "urlFilter": "||zemanta.com^"
     }
   },
   {
@@ -766,7 +796,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||adthrive.com^"
+      "urlFilter": "||revcontent.com^"
     }
   },
   {
@@ -776,7 +806,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||teads.tv^"
+      "urlFilter": "||mgid.com^"
     }
   },
   {
@@ -786,7 +816,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||sharethrough.com^"
+      "urlFilter": "||dable.io^"
     }
   },
   {
@@ -796,7 +826,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||spotxchange.com^"
+      "urlFilter": "||nativo.com^"
     }
   },
   {
@@ -806,7 +836,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||spotx.tv^"
+      "urlFilter": "||adroll.com^"
     }
   },
   {
@@ -816,7 +846,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||springserve.com^"
+      "urlFilter": "||adthrive.com^"
     }
   },
   {
@@ -826,7 +856,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||unrulymedia.com^"
+      "urlFilter": "||teads.tv^"
     }
   },
   {
@@ -836,7 +866,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||stickyadstv.com^"
+      "urlFilter": "||sharethrough.com^"
     }
   },
   {
@@ -846,7 +876,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||tremorhub.com^"
+      "urlFilter": "||spotxchange.com^"
     }
   },
   {
@@ -856,7 +886,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||innovid.com^"
+      "urlFilter": "||spotx.tv^"
     }
   },
   {
@@ -866,7 +896,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||vidazoo.com^"
+      "urlFilter": "||springserve.com^"
     }
   },
   {
@@ -876,7 +906,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||videoamp.com^"
+      "urlFilter": "||unrulymedia.com^"
     }
   },
   {
@@ -886,7 +916,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||vidoomy.com^"
+      "urlFilter": "||stickyadstv.com^"
     }
   },
   {
@@ -896,7 +926,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||nativeroll.tv^"
+      "urlFilter": "||tremorhub.com^"
     }
   },
   {
@@ -906,7 +936,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||loopme.me^"
+      "urlFilter": "||innovid.com^"
     }
   },
   {
@@ -916,7 +946,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||gumgum.com^"
+      "urlFilter": "||vidazoo.com^"
     }
   },
   {
@@ -926,7 +956,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||media.net^"
+      "urlFilter": "||videoamp.com^"
     }
   },
   {
@@ -936,7 +966,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||popads.net^"
+      "urlFilter": "||vidoomy.com^"
     }
   },
   {
@@ -946,7 +976,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||popcash.net^"
+      "urlFilter": "||nativeroll.tv^"
     }
   },
   {
@@ -956,7 +986,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||propellerads.com^"
+      "urlFilter": "||loopme.me^"
     }
   },
   {
@@ -966,7 +996,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||propellerpops.com^"
+      "urlFilter": "||gumgum.com^"
     }
   },
   {
@@ -976,7 +1006,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||adsterra.com^"
+      "urlFilter": "||media.net^"
     }
   },
   {
@@ -986,7 +1016,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||exoclick.com^"
+      "urlFilter": "||popads.net^"
     }
   },
   {
@@ -996,7 +1026,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||exosrv.com^"
+      "urlFilter": "||popcash.net^"
     }
   },
   {
@@ -1006,7 +1036,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||juicyads.com^"
+      "urlFilter": "||propellerads.com^"
     }
   },
   {
@@ -1016,7 +1046,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||trafficjunky.net^"
+      "urlFilter": "||propellerpops.com^"
     }
   },
   {
@@ -1026,7 +1056,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||adcash.com^"
+      "urlFilter": "||adsterra.com^"
     }
   },
   {
@@ -1036,7 +1066,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||hilltopads.net^"
+      "urlFilter": "||exoclick.com^"
     }
   },
   {
@@ -1046,7 +1076,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||zedo.com^"
+      "urlFilter": "||exosrv.com^"
     }
   },
   {
@@ -1056,7 +1086,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||adition.com^"
+      "urlFilter": "||juicyads.com^"
     }
   },
   {
@@ -1066,7 +1096,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||moatads.com^"
+      "urlFilter": "||trafficjunky.net^"
     }
   },
   {
@@ -1076,7 +1106,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||adsafeprotected.com^"
+      "urlFilter": "||adcash.com^"
     }
   },
   {
@@ -1086,7 +1116,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||doubleverify.com^"
+      "urlFilter": "||hilltopads.net^"
     }
   },
   {
@@ -1096,7 +1126,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||serving-sys.com^"
+      "urlFilter": "||zedo.com^"
     }
   },
   {
@@ -1106,7 +1136,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||flashtalking.com^"
+      "urlFilter": "||adition.com^"
     }
   },
   {
@@ -1116,7 +1146,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||inmobi.com^"
+      "urlFilter": "||moatads.com^"
     }
   },
   {
@@ -1126,7 +1156,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||applovin.com^"
+      "urlFilter": "||adsafeprotected.com^"
     }
   },
   {
@@ -1136,7 +1166,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||adcolony.com^"
+      "urlFilter": "||doubleverify.com^"
     }
   },
   {
@@ -1146,7 +1176,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||chartboost.com^"
+      "urlFilter": "||serving-sys.com^"
     }
   },
   {
@@ -1156,7 +1186,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||vungle.com^"
+      "urlFilter": "||flashtalking.com^"
     }
   },
   {
@@ -1166,7 +1196,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||mobfox.com^"
+      "urlFilter": "||inmobi.com^"
     }
   },
   {
@@ -1176,7 +1206,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||admicro.vn^"
+      "urlFilter": "||applovin.com^"
     }
   },
   {
@@ -1186,7 +1216,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||eclick.vn^"
+      "urlFilter": "||adcolony.com^"
     }
   },
   {
@@ -1196,7 +1226,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||adtima.vn^"
+      "urlFilter": "||chartboost.com^"
     }
   },
   {
@@ -1206,7 +1236,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||ants.vn^"
+      "urlFilter": "||vungle.com^"
     }
   },
   {
@@ -1216,7 +1246,7 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||novanet.vn^"
+      "urlFilter": "||mobfox.com^"
     }
   },
   {
@@ -1226,11 +1256,61 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||adsplay.net^"
+      "urlFilter": "||admicro.vn^"
     }
   },
   {
     "id": 1123,
+    "priority": 1,
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||eclick.vn^"
+    }
+  },
+  {
+    "id": 1124,
+    "priority": 1,
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||adtima.vn^"
+    }
+  },
+  {
+    "id": 1125,
+    "priority": 1,
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||ants.vn^"
+    }
+  },
+  {
+    "id": 1126,
+    "priority": 1,
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||novanet.vn^"
+    }
+  },
+  {
+    "id": 1127,
+    "priority": 1,
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||adsplay.net^"
+    }
+  },
+  {
+    "id": 1128,
     "priority": 1,
     "action": {
       "type": "block"

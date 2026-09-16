@@ -12,7 +12,7 @@
   if (window.__BAB__) return;
 
   const NS = {
-    VERSION: "0.1.0",
+    VERSION: "0.2.0",
 
     // ISOLATED world ghi đè ngay khi đọc xong chrome.storage. Mặc định bật để
     // không bỏ lọt quảng cáo trong vài mili giây chờ storage trả lời.

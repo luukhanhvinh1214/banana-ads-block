@@ -29,8 +29,13 @@ const same = (name, actual, expected) =>
 
 // ===== Dựng môi trường =====
 
-const makeContext = () => {
-  const ctx = vm.createContext({ console });
+const makeContext = (hostname = "www.youtube.com") => {
+  // src/ba_prune.js tự kiểm tên miền vì nó được nạp trên mọi trang. Không dựng
+  // location thì file thoát ngay và mọi test dưới đây thành vô nghĩa.
+  const ctx = vm.createContext({
+    console,
+    location: { hostname, href: "https://" + hostname + "/" },
+  });
   vm.runInContext("var window = globalThis;", ctx);
   for (const file of ["src/ba_core.js", "src/ba_prune.js"]) {
     vm.runInContext(fs.readFileSync(path.join(ROOT, file), "utf8"), ctx, { filename: file });
@@ -167,7 +172,26 @@ const feed = {
   same("vòng lặp: vẫn gỡ được thẻ quảng cáo", run(ctx, "window.ytInitialData.contents.items.length"), 0);
 }
 
-// ===== 8. Tắt tiện ích thì không đụng vào gì =====
+// ===== 8. Trang không phải YouTube thì không hook gì cả =====
+{
+  const ctx = makeContext("vnexpress.net");
+  same("ngoài YouTube: không hook", run(ctx, "window.__BAB__.hooked.length"), 0);
+  ctx.raw = JSON.stringify(playerResponse);
+  const out = run(ctx, "JSON.parse(globalThis.raw)");
+  check("ngoài YouTube: giữ nguyên dữ liệu", Array.isArray(out.adPlacements));
+  check(
+    "ngoài YouTube: không dựng setter ytInitialData",
+    run(ctx, '!Object.getOwnPropertyDescriptor(window, "ytInitialData")')
+  );
+}
+
+// Tên miền con của YouTube vẫn phải được hook
+{
+  const ctx = makeContext("m.youtube.com");
+  check("m.youtube.com: có hook", run(ctx, "window.__BAB__.hooked.length") > 0);
+}
+
+// ===== 9. Tắt tiện ích thì không đụng vào gì =====
 {
   const ctx = makeContext();
   run(ctx, "window.__BAB__.enabled = false;");

@@ -10,7 +10,13 @@ const KEY_ALLOWLIST = "bab_allowlist";
 const KEY_OPTS = "bab_opts";
 const KEY_STATS = "bab_stats";
 
-const DEFAULT_OPTS = { cosmetic: true, popup: true, video: true, trackers: false };
+const DEFAULT_OPTS = {
+  cosmetic: true,
+  popup: true,
+  video: true,
+  banners: true,
+  trackers: false,
+};
 const DEFAULT_STATS = { network: 0, cosmetic: 0, popup: 0, video: 0 };
 
 // Dải id riêng cho luật động, tránh đụng dải của rules/*.json (1000 và 20000).

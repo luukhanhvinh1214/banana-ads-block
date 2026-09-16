@@ -23,7 +23,7 @@ const siteWrap = $("site");
 const siteHost = $("site-host");
 const siteBtn = $("site-toggle");
 
-const OPTS = ["cosmetic", "popup", "video", "trackers"];
+const OPTS = ["cosmetic", "banners", "popup", "video", "trackers"];
 
 let host = "";
 let siteAllowed = false;

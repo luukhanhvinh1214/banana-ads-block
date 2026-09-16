@@ -6,6 +6,22 @@
 #
 # Sửa xong phải chạy: node tools/gen_rules.js
 
+# ===== Bản thế thân =====
+# Cú pháp "urlFilter => /đường/dẫn.js" là THAY THẾ chứ không chặn: yêu cầu vẫn
+# thành công nhưng nhận về một tệp rỗng chạy được nằm trong extension.
+#
+# Vì sao không chặn thẳng: trang gắn onerror lên thẻ script quảng cáo, hoặc
+# kiểm tra biến toàn cục mà tệp đó lẽ ra tạo ra. Chặn là lộ. Ngoài ra nhiều
+# trang xếp cả việc dựng bố cục vào googletag.cmd — không ai chạy hàng đợi đó
+# thì phần nội dung bình thường cũng đứng im.
+#
+# Các luật này có priority 2, cao hơn luật chặn, nên thắng.
+||pagead2.googlesyndication.com/pagead/js/adsbygoogle.js => /surrogates/adsbygoogle.js
+||securepubads.g.doubleclick.net/tag/js/gpt.js => /surrogates/gpt.js
+||googletagservices.com/tag/js/gpt.js => /surrogates/gpt.js
+||pagead2.googlesyndication.com/pagead/show_ads.js => /surrogates/noop.js
+||pagead2.googlesyndication.com/pagead/managed/js/adsense => /surrogates/noop.js
+
 # ===== Google / DoubleClick =====
 ||doubleclick.net^
 ||googlesyndication.com^

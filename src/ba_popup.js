@@ -54,7 +54,14 @@
   const CLOSE_BUTTON =
     '[class*="close" i],[id*="close" i],[aria-label*="close" i],' +
     '[aria-label*="đóng" i],[title*="close" i],[title*="đóng" i],' +
-    '.dismiss,[class*="dismiss" i],button.btn-close';
+    '.dismiss,[class*="dismiss" i],button.btn-close,' +
+    // Không phải nút đóng nào cũng tự nhận là "close". Dải quảng cáo dính trên
+    // animevietsub.zip dùng <a href="javascript:hide_catfix()">X</a>.
+    '[class*="hide" i],[id*="hide" i],a[href^="javascript:"]';
+
+  // Chữ trên nút đóng. Lọc thêm bằng cái này vì các selector ở trên, nhất là
+  // a[href^="javascript:"], bắt cả những liên kết bình thường của trang.
+  const CLOSE_TEXT = /^(x|×|✕|✖|❌|close|đóng|tắt|bỏ qua|skip)$/i;
 
   const MARK = 'data-bab-killed';
 
@@ -64,6 +71,8 @@
   let queue = [];
 
   const text = (el) => (el.innerText || el.textContent || '').toLowerCase();
+
+  const trimText = (el) => (el.innerText || el.textContent || '').replace(/\s+/g, ' ').trim();
 
   const looksAntiAdblock = (el) => {
     // Hộp thoại đòi tắt trình chặn luôn ngắn. Giới hạn độ dài để không quét cả
@@ -96,6 +105,49 @@
     return coversViewport || floatsHigh;
   };
 
+  // Nhận quảng cáo theo HÌNH DẠNG, không theo tên miền hay tên lớp.
+  //
+  // Cần đến nó vì loại quảng cáo phiền nhất lại không để lại dấu vết nào ở hai
+  // lớp kia: trang tự phục vụ ảnh từ tên miền của mình nên bộ luật mạng không
+  // có gì để chặn, và đặt tên lớp riêng nên danh sách selector không đoán
+  // được. Đo trên animevietsub.zip: một dải dính đáy màn hình, class
+  // "pc-catfixx", z-index 99990, bên trong chỉ có hai tấm ảnh bọc liên kết
+  // sang yo88chinhhang.com và go88.adqc.net.
+  //
+  // Dấu hiệu chung của loại này: nổi lên trên cùng, toàn ảnh dẫn sang tên miền
+  // khác, và gần như không có chữ. Chính chỗ "không có chữ" tách nó khỏi băng
+  // cookie và hộp đăng nhập — những thứ tuyệt đối không được đụng vào.
+  const MAX_AD_TEXT = 120;
+
+  const isAdBanner = (el) => {
+    // Có ô nhập liệu nghĩa là biểu mẫu thật: đăng nhập, tìm kiếm, đồng ý cookie.
+    if (el.querySelector('input, textarea, select, form')) return false;
+
+    const body = trimText(el);
+    if (body.length > MAX_AD_TEXT) return false;
+
+    const images = el.querySelectorAll('img, picture, video');
+    if (!images.length) return false;
+
+    const links = el.querySelectorAll('a[href]');
+    if (!links.length) return false;
+
+    let external = 0;
+    for (const a of links) {
+      let host = '';
+      try {
+        const url = new URL(a.href, location.href);
+        if (url.protocol !== 'http:' && url.protocol !== 'https:') continue;
+        host = url.hostname;
+      } catch (e) {
+        continue;
+      }
+      if (host && !CS.sameSite(host)) external++;
+    }
+
+    return external > 0;
+  };
+
   // Bấm nút đóng của chính quảng cáo trước khi gỡ tay. Nhiều mạng quảng cáo
   // dựng lại lớp phủ ngay khi thấy nút của mình biến mất mà chưa được bấm;
   // bấm đúng nút thì chúng coi như đã xong lượt hiển thị và thôi.
@@ -104,6 +156,11 @@
     for (const btn of buttons) {
       const rect = btn.getBoundingClientRect();
       if (rect.width > 120 || rect.height > 120) continue;
+      const label = trimText(btn);
+      // Nút đóng thật thì hoặc không có chữ (chỉ là hình chữ thập), hoặc có
+      // đúng một chữ ngắn. Liên kết dài là liên kết thật của quảng cáo, bấm
+      // vào là mở đúng cái trang mà ta đang cố tránh.
+      if (label.length > 8 && !CLOSE_TEXT.test(label)) continue;
       try {
         btn.click();
         return true;
@@ -157,8 +214,25 @@
     if (!el || el.nodeType !== 1 || el.hasAttribute(MARK)) return 0;
     if (el === document.body || el === document.documentElement) return 0;
     if (!isOverlay(el)) return 0;
-    if (!el.querySelector(AD_INSIDE) && !looksAntiAdblock(el)) return 0;
+
+    // Ba đường nhận diện, chỉ cần một đường ăn. Không đường nào ăn thì để yên:
+    // gỡ một lớp phủ không rõ lai lịch là gỡ nhầm hộp đăng nhập.
+    const evidence =
+      el.querySelector(AD_INSIDE) || looksAntiAdblock(el) || isAdBanner(el);
+    if (!evidence) return 0;
+
     return kill(el);
+  };
+
+  // Lớp phủ hay được bọc trong một thẻ chứa, và bộ theo dõi chỉ báo về thẻ
+  // ngoài cùng vừa được thêm. Soi thêm một tầng con là đủ cho gần hết các
+  // trường hợp mà không phải duyệt cả cây.
+  const checkWithChildren = (el) => {
+    let n = check(el);
+    if (el && el.nodeType === 1 && el.children) {
+      for (const child of el.children) n += check(child);
+    }
+    return n;
   };
 
   const sweep = () => {
@@ -170,9 +244,10 @@
     let n = 0;
 
     try {
-      for (const el of batch) n += check(el);
+      for (const el of batch) n += checkWithChildren(el);
       // Lớp phủ hay được gắn thẳng vào body, và có khi đã nằm sẵn trong HTML
-      // trước lúc bộ theo dõi kịp chạy.
+      // trước lúc bộ theo dõi kịp chạy. Phần tử position:fixed gần như bắt
+      // buộc phải là con trực tiếp của body để bám theo khung nhìn.
       if (document.body) {
         for (const el of document.body.children) n += check(el);
       }

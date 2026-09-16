@@ -14,6 +14,11 @@
   const NS = window.__BAB__;
   if (!NS || NS.hooked.length) return;
 
+  // Bộ MAIN world nạp trên mọi trang để src/ba_shield.js làm việc của nó,
+  // nhưng phần dưới đây chỉ có nghĩa với YouTube. Hook JSON.parse của mọi
+  // trang trên đời là trả một cái giá không đổi lấy được gì.
+  if (!/(^|\.)(youtube\.com|youtube-nocookie\.com)$/.test(location.hostname)) return;
+
   // Chặn cửa sớm: chỉ đụng vào chuỗi nào thật sự có dấu vết quảng cáo.
   // JSON.parse trên YouTube chạy vài nghìn lần mỗi phút, phần lớn là dữ liệu
   // bình thường; duyệt cây hết thảy thì giật hình khi cuộn trang.

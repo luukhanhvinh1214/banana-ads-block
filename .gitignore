@@ -9,6 +9,16 @@ dist/
 build/
 *.zip
 
+# Chrome sinh ra ngay trong thư mục extension khi nạp bản giải nén: bản biên
+# dịch của rules/*.json. Không phải mã nguồn, và sẽ khác nhau theo từng máy.
+_metadata/
+
+# Công cụ chỉ dùng khi phát triển, không thuộc phần đóng gói extension.
+# .mcp.json trỏ tới mcp-server/, bỏ theo luôn cho khỏi trỏ vào chỗ trống.
+tools/
+mcp-server/
+.mcp.json
+
 # Logs
 *.log
 npm-debug.log*

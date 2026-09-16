@@ -1,7 +1,7 @@
 {
   "name": "Banana Ads Block",
   "description": "Chặn quảng cáo, tự đóng popup và bỏ qua quảng cáo video",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "manifest_version": 3,
   "icons": {
     "16": "icons/icon16.png",
@@ -45,8 +45,13 @@
   },
   "content_scripts": [
     {
-      "js": ["./src/ba_core.js", "./src/ba_prune.js", "./src/ba_boot.js"],
-      "matches": ["*://*.youtube.com/*", "*://*.youtube-nocookie.com/*"],
+      "js": [
+        "./src/ba_core.js",
+        "./src/ba_shield.js",
+        "./src/ba_prune.js",
+        "./src/ba_boot.js"
+      ],
+      "matches": ["<all_urls>"],
       "run_at": "document_start",
       "world": "MAIN",
       "all_frames": true
@@ -61,6 +66,16 @@
       "matches": ["<all_urls>"],
       "run_at": "document_start",
       "all_frames": true
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "surrogates/adsbygoogle.js",
+        "surrogates/gpt.js",
+        "surrogates/noop.js"
+      ],
+      "matches": ["<all_urls>"]
     }
   ]
 }
