@@ -32,8 +32,7 @@ git clone https://github.com/luukhanhvinh1214/banana-ads-block.git
 
 ## Bản ổn định
 
-Nhánh `main` là bản đang sửa, có lúc chưa chạy ngon. Muốn dùng cho yên tâm thì
-tải bản ổn định ở đây:
+Nếu bạn gặp lỗi hoặc không thể sử dụng git thì hãy tải phiên bản ổn định ở đây:
 
 [Google Drive](https://drive.google.com/drive/folders/1hk_-QRqmFatN4ZNTmJw1FyMURhguPKpJ?usp=sharing)
 
