@@ -1,22 +1,10 @@
-// ===================== Lớp 2: dọn khối quảng cáo trên trang =====================
-// Chặn ở tầng mạng làm yêu cầu quảng cáo thất bại, nhưng cái khung rỗng vẫn
-// chiếm chỗ: một dải trắng cao 250px giữa bài viết. Lớp này ẩn phần vỏ đó.
-//
-// Hai đường, cố ý dư thừa:
-//   1. Một thẻ style cắm ngay lúc document_start với danh sách selector chắc
-//      chắn là quảng cáo. Trình duyệt tự áp, không chờ JavaScript, nên không
-//      thấy quảng cáo loé lên rồi mới biến mất.
-//   2. Một bộ quét chạy sau, bắt những khung iframe trỏ về máy chủ quảng cáo
-//      mà danh sách selector không đoán trước được tên lớp.
+// Lớp 2: ẩn khối quảng cáo còn sót lại trên trang.
 
 (() => {
   const CS = window.__BAB_CS__;
   if (!CS || CS.cosmetic) return;
 
-  // Ẩn thẳng, không hỏi han. Toàn những thứ mà một đoạn mã dò không dựng ra:
-  // khung của đúng máy chủ quảng cáo, hoặc thẻ riêng của YouTube.
-  // Cố tình không dùng [class*="ad-"]: nó khớp cả "add-to-cart", "adaptive",
-  // "address" và làm mất nút bấm của trang.
+  // Ẩn thẳng. Không dùng [class*="ad-"]: nó khớp cả "add-to-cart", "address".
   const HARD = [
     '[data-ad-client]',
     '[data-ad-slot]',
@@ -34,16 +22,15 @@
     '[id*="outbrain"]',
     '[class*="OUTBRAIN"]',
     '[class*="mgid-"]',
-    // "catfish" là tên quy ước cho dải quảng cáo dính đáy màn hình, dùng rộng
-    // rãi trên các trang Việt Nam. Đo được trên animevietsub.zip: id
-    // "pc-catfixx". Đoạn mã dò chặn quảng cáo không dựng tên này bao giờ.
     '[id*="catfish" i]',
     '[class*="catfish" i]',
     '[id*="catfix" i]',
     '[class*="catfix" i]',
-    // Ô quảng cáo của trình phát JW Player
     '[class*="afs_ads"]',
-    // YouTube: các ô quảng cáo mà lớp cắt dữ liệu để lọt qua
+    // TikTok. Bám data-e2e vì đó là móc test của chính TikTok, sống qua các
+    // lượt build; tên lớp bên cạnh sinh lại mỗi lần.
+    'article:has([data-e2e="sponsored-tag"])',
+    '[data-e2e="recommend-list-item-container"]:has([data-e2e="sponsored-tag"])',
     '#player-ads',
     '#masthead-ad',
     'ytd-promoted-sparkles-web-renderer',
@@ -55,16 +42,9 @@
     '.ytp-ad-overlay-slot',
   ];
 
-  // Ẩn CÓ ĐIỀU KIỆN. Đây đúng là những tên mà thư viện dò chặn quảng cáo dựng
-  // sẵn một thẻ div rỗng rồi đo xem nó có bị ẩn không — ẩn thẳng là tự khai
-  // báo mình đang chạy, và trang sẽ khoá nội dung lại.
-  //
-  // Đo được trên youtube.com, animevietsub.zip và remove.bg: bảy tên dưới đây
-  // từng làm mồi nhử ăn đúng, cho tới khi thêm điều kiện :has().
-  //
-  // Điều kiện: chỉ ẩn khi bên trong CÓ THỰC THỂ hiển thị được. Quảng cáo thật
-  // luôn bọc một khung, một ảnh hay một liên kết; mồi nhử thì rỗng hoặc chỉ có
-  // mỗi chữ.
+  // Ẩn CÓ ĐIỀU KIỆN. Thư viện dò chặn quảng cáo dựng sẵn thẻ div rỗng mang
+  // đúng những tên này rồi đo xem có bị ẩn không, nên ẩn thẳng là tự khai báo.
+  // Quảng cáo thật luôn bọc một khung, một ảnh hay một liên kết; mồi thì rỗng.
   const HAS_REAL_AD = ':has(iframe, ins, img, video, a, object, embed, canvas)';
 
   const BAIT_PRONE = [
@@ -91,9 +71,6 @@
     '.advertisement',
     '.advertising-container',
     '[id^="M"][id*="ScriptRootC"]',
-    // Đo trên truyenqqko.com: mọi banner cờ bạc ở đó đều mang class
-    // "ads-banner" và nằm trong khối id "ad_info*". Có chữ "s" nên không khớp
-    // các mẫu "ad-" ở trên.
     '[class*="ads-banner"]',
     '[class^="ads-"]',
     '[class*=" ads-"]',
@@ -102,8 +79,6 @@
 
   const SELECTORS = HARD.concat(BAIT_PRONE.map((s) => s + HAS_REAL_AD));
 
-  // Mảnh tên miền dùng để nhận iframe quảng cáo. Ngắn gọn có chủ đích: đây chỉ
-  // là lưới vớt, việc chặn thật đã do rules/ads.json làm ở tầng mạng.
   const AD_HOSTS = [
     'doubleclick.net',
     'googlesyndication.com',
@@ -132,12 +107,7 @@
     'adtima.vn',
   ];
 
-  // Khung quảng cáo của các mạng đổi tên miền liên tục.
-  //
-  // Đo trên truyenqqko.com: iframe id "__clb-spot_2098132_fpt_1_container" trỏ
-  // về avalanchetremorunfilled.com, nằm chen giữa vùng đọc truyện; bấm nhầm
-  // vào là mở 7 tab. Tên miền sinh ngẫu nhiên nên không liệt kê được, nhưng
-  // tên id của khung thì theo quy ước cố định của mạng quảng cáo.
+  // Mạng quảng cáo đổi tên miền liên tục, nhưng tên id của khung thì cố định.
   const AD_FRAME_ID = [
     '[id*="clb-spot"]',
     '[id^="google_ads_iframe"]',
@@ -146,9 +116,7 @@
     '[id^="adframe"]',
   ].join(',');
 
-  // Kích thước chuẩn IAB. Một khung của bên thứ ba đúng bằng một trong các cỡ
-  // này thì gần như chắc chắn là quảng cáo: nhúng thật (video, bản đồ, biểu
-  // mẫu thanh toán) không bao giờ rơi đúng vào bảng cỡ quảng cáo.
+  // Cỡ chuẩn IAB. Nhúng thật không bao giờ rơi đúng vào bảng cỡ quảng cáo.
   const IAB_SIZES = [
     [728, 90], [970, 90], [970, 250], [300, 250], [336, 280], [300, 600],
     [160, 600], [120, 600], [320, 50], [320, 100], [468, 60], [234, 60],
@@ -171,14 +139,11 @@
   let observer = null;
   let scheduled = 0;
   let on = false;
-  // Tách công tắc riêng cho phần nhận banner theo hình dạng: đây là phần đoán
-  // nhiều nhất trong cả extension, nên phải tắt được mà không mất các lớp kia.
   let banners = true;
 
   const addStyle = () => {
     if (styleEl && styleEl.isConnected) return;
-    // documentElement chứ không phải head: ở document_start thẻ head có thể
-    // chưa tồn tại, mà chờ nó thì mất đúng khoảng thời gian cần che.
+    // documentElement chứ không phải head: ở document_start head có thể chưa có.
     const root = document.documentElement;
     if (!root) return;
     styleEl = document.createElement('style');
@@ -206,9 +171,8 @@
     return 1;
   };
 
-  // Ẩn cái iframe thôi thì vẫn còn cái khung bọc nó, thường có nền xám và một
-  // dòng "Quảng cáo". Leo lên tối đa ba tầng, và chỉ leo khi tầng cha không
-  // chứa gì khác ngoài quảng cáo — nếu không sẽ nuốt luôn nội dung bài viết.
+  // Chỉ leo khi tầng cha không chứa gì ngoài quảng cáo, nếu không sẽ nuốt luôn
+  // nội dung bài viết.
   const hideWrapper = (el) => {
     let node = el;
     for (let i = 0; i < 3; i++) {
@@ -221,33 +185,12 @@
     return hide(node);
   };
 
-  // Banner ảnh nằm ngay trong dòng chảy trang, không phải lớp phủ.
-  //
-  // Loại này không để lại dấu vết nào cho hai lớp trước: trang tự phục vụ ảnh
-  // nên không có yêu cầu mạng để chặn, và đặt tên lớp riêng nên selector không
-  // đoán được. Đo trên animevietsub.zip: ba dải quảng cáo cờ bạc quanh trình
-  // phát, mỗi dải là một thẻ <a target="_blank" rel="nofollow"> bọc đúng một
-  // tấm ảnh, không kèm chữ nào.
-  //
-  // Nhận theo hình dạng: ảnh đủ to, dẫn sang tên miền khác, mở tab mới hoặc
-  // đánh dấu nofollow/sponsored, và KHÔNG có chữ. Chỗ "không có chữ" là điều
-  // kiện quan trọng nhất — nó loại được liên kết thật trong bài viết, thẻ ảnh
-  // minh hoạ có chú thích, và mục tin bài dẫn sang trang khác.
   const SPONSORED = /(^|\s)(nofollow|sponsored)(\s|$)/i;
-  // Ngưỡng đo trên truyenqqko.com: banner dọc bên lề chỉ rộng 135px, banner
-  // ngang trên đầu cao 90px. Cạnh nhỏ nhất để 50 cho lọt cả dải ngang mỏng
-  // kiểu 970x50; chặn dưới bằng diện tích thì logo đối tác cỡ 100x40 vẫn
-  // không dính.
   const MIN_BANNER_SIDE = 50;
   const MIN_BANNER_AREA = 20000;
 
-  // Huy hiệu đánh giá và nút tải ứng dụng. Chúng có đúng hình dạng của quảng
-  // cáo — ảnh, dẫn sang tên miền khác, không kèm chữ — nên phải loại theo tên.
-  //
-  // Không loại được bằng kích thước: đo trên remove.bg, huy hiệu Product Hunt
-  // là 242x108 = 26136, trong khi banner quảng cáo dọc trên truyenqqko.com là
-  // 135x270 = 36450. Hai con số quá gần nhau, kê ngưỡng vào giữa là vừa ẩn oan
-  // huy hiệu của trang khác vừa bỏ lọt quảng cáo.
+  // Huy hiệu đánh giá có đúng hình dạng quảng cáo nên phải loại theo tên miền:
+  // huy hiệu Product Hunt 242x108 còn nhỏ hơn banner quảng cáo dọc 135x270.
   const BADGE_HOSTS = [
     'producthunt.com',
     'trustpilot.com',
@@ -270,13 +213,8 @@
     return false;
   };
 
-  // Kích thước thật của một liên kết ảnh.
-  //
-  // KHÔNG đo bằng getBoundingClientRect của chính thẻ <a>. Thẻ <a> mặc định là
-  // inline; bọc quanh một <img> hiển thị block thì hộp của nó xẹp lại còn
-  // đúng chiều cao dòng chữ. Đo trên truyenqqko.com: banner 728x90 cho ra hộp
-  // 728x18, rớt dưới mọi ngưỡng chiều cao. Lấy hộp của tấm ảnh lớn nhất bên
-  // trong mới ra con số đúng.
+  // Không đo bằng hộp của chính thẻ <a>: thẻ <a> là inline nên bọc quanh <img>
+  // block thì hộp xẹp còn đúng chiều cao dòng chữ.
   const linkBox = (a) => {
     let best = a.getBoundingClientRect();
     let area = best.width * best.height;
@@ -290,6 +228,8 @@
     return best;
   };
 
+  // Nhận banner theo hình dạng: ảnh đủ to, dẫn sang tên miền khác, KHÔNG có chữ.
+  // Điều kiện không có chữ tách nó khỏi liên kết thật trong bài viết.
   const isBannerAd = (a) => {
     let host;
     try {
@@ -305,8 +245,6 @@
     if ((a.innerText || a.textContent || '').trim().length > 3) return false;
     if (!a.querySelector('img')) return false;
 
-    // Thanh điều hướng và đầu trang hay có logo đối tác dẫn ra ngoài. Đó là
-    // bộ khung của trang, không phải quảng cáo chèn vào.
     if (a.closest('nav, header')) return false;
 
     const rect = linkBox(a);
@@ -321,7 +259,6 @@
     return false;
   };
 
-  // Khung của bên thứ ba có kích thước đúng bằng một cỡ quảng cáo chuẩn.
   const isAdSizedFrame = (frame) => {
     const src = frame.getAttribute('src') || frame.getAttribute('data-src');
     if (!src) return false;
@@ -341,6 +278,92 @@
       if (Math.abs(rect.width - w) <= 4 && Math.abs(rect.height - h) <= 4) return true;
     }
     return false;
+  };
+
+  // Facebook không có selector nào bám được: tên lớp là chuỗi băm sinh lại mỗi
+  // lượt build. Chỉ còn chữ trên nhãn, mà chữ đó có một ký tự U+200B dính ngay
+  // sau và trim() không cắt nó, nên phải lọc ký tự vô hình trước khi so.
+  const IS_FACEBOOK = /(^|\.)facebook\.com$/i.test(location.hostname);
+
+  const FB_INVISIBLE = /[­​-‏⁠﻿]/g;
+  const FB_LABELS = [
+    'được tài trợ',
+    'sponsored',
+    'đủ điều kiện nhận tiền hoa hồng',
+    'eligible for commission',
+  ];
+
+  // So khớp CẢ CHUỖI: có người tên "Nguyễn Thành Được" và có bài viết nguyên
+  // câu "hôm nay tôi được tài trợ một chuyến đi".
+  const FB_LABEL_MAX = 40;
+
+  const FB_REF_ATTRS = ['aria-labelledby', 'aria-describedby'];
+
+  const isFbLabel = (raw) => {
+    const t = (raw || '').replace(FB_INVISIBLE, '').replace(/\s+/g, ' ').trim().toLowerCase();
+    if (!t || t.length > FB_LABEL_MAX) return false;
+    for (const label of FB_LABELS) {
+      if (t === label) return true;
+    }
+    return false;
+  };
+
+  const fbPostIsAd = (post) => {
+    const walker = document.createTreeWalker(post, NodeFilter.SHOW_TEXT);
+    let node;
+    let seen = 0;
+    while ((node = walker.nextNode()) && seen++ < 80) {
+      if (isFbLabel(node.nodeValue)) return true;
+    }
+
+    // Đường duy nhất bắt được bài quảng cáo trong feed: chữ nhãn không nằm
+    // trong bài. Facebook để nó trong một <span id> ẩn ở cuối body, bài chỉ giữ
+    // con trỏ aria-labelledby tới id đó.
+    for (const el of post.querySelectorAll('[aria-labelledby], [aria-describedby]')) {
+      for (const attr of FB_REF_ATTRS) {
+        const ids = el.getAttribute(attr);
+        if (!ids) continue;
+        for (const id of ids.split(/\s+/)) {
+          const target = document.getElementById(id);
+          if (target && isFbLabel(target.textContent)) return true;
+        }
+      }
+    }
+
+    return false;
+  };
+
+  // Leo từ nhãn lên tổ tiên đầu tiên CÓ CHỨA liên kết; các tầng dưới chỉ bọc
+  // mỗi dòng tiêu đề. Chặn theo kích thước là bắt buộc: thêm một tầng nữa là
+  // khung ôm cả trang, ẩn nhầm thành màn hình trắng.
+  const fbAdBox = (label) => {
+    let node = label;
+    for (let i = 0; i < 14; i++) {
+      const parent = node.parentElement;
+      if (!parent || parent === document.body || parent === document.documentElement) return null;
+      node = parent;
+      const rect = node.getBoundingClientRect();
+      if (rect.width > innerWidth * 0.6 || rect.height > innerHeight * 2) return null;
+      if (node.querySelector('a[href]')) return node;
+    }
+    return null;
+  };
+
+  const scanFacebook = (root) => {
+    let n = 0;
+
+    for (const post of root.querySelectorAll('[aria-posinset]')) {
+      if (post.hasAttribute(MARK)) continue;
+      if (fbPostIsAd(post)) n += hide(post);
+    }
+
+    for (const label of root.querySelectorAll('h3')) {
+      if (!isFbLabel(label.textContent)) continue;
+      const box = fbAdBox(label);
+      if (box) n += hide(box);
+    }
+
+    return n;
   };
 
   const scan = (root) => {
@@ -367,6 +390,8 @@
       }
     }
 
+    if (IS_FACEBOOK) n += scanFacebook(root);
+
     return n;
   };
 
@@ -389,7 +414,15 @@
     addStyle();
     observer = new MutationObserver(schedule);
     const attach = () => {
-      if (document.documentElement) observer.observe(document.documentElement, { childList: true, subtree: true });
+      if (!document.documentElement) return;
+      const opts = { childList: true, subtree: true };
+      // Facebook gắn aria-labelledby vào bài SAU khi bài đã vào DOM. Nghe mỗi
+      // childList thì không còn gì đánh thức bộ quét và bài quảng cáo lọt hẳn.
+      if (IS_FACEBOOK) {
+        opts.attributes = true;
+        opts.attributeFilter = FB_REF_ATTRS;
+      }
+      observer.observe(document.documentElement, opts);
     };
     attach();
     schedule();
@@ -400,23 +433,20 @@
     removeStyle();
     if (observer) observer.disconnect();
     observer = null;
-    // Trả lại những gì đã ẩn, nếu không người dùng tắt tiện ích xong vẫn thấy
-    // trang thủng lỗ chỗ cho tới lúc F5.
     for (const el of document.querySelectorAll('[' + MARK + ']')) {
       el.removeAttribute(MARK);
       el.style.removeProperty('display');
     }
   };
 
-  // Cắm style ngay, đừng chờ service worker trả lời. Trang nào nằm trong danh
-  // sách bỏ qua thì lượt onChange đầu tiên sẽ gỡ ra, chậm vài chục mili giây.
+  // Cắm style ngay, đừng chờ service worker trả lời. Trang trong danh sách bỏ
+  // qua sẽ được gỡ ở lượt onChange đầu tiên.
   addStyle();
 
   CS.onChange((active, opts) => {
     banners = opts.banners !== false;
     if (active && opts.cosmetic !== false) start();
     else stop();
-    // Bật lại giữa chừng thì quét ngay, đừng chờ trang có thay đổi mới quét.
     if (on) schedule();
   });
 

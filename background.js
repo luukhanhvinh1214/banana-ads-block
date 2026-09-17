@@ -1,9 +1,8 @@
-// ===================== Service worker =====================
-// Giữ trạng thái và làm trọng tài giữa popup, content script và bộ luật mạng.
+// Service worker: giữ trạng thái và làm trọng tài giữa popup, content script và
+// bộ luật mạng.
 //
-// Service worker của MV3 bị tắt bất cứ lúc nào, nên mọi thứ cần sống lâu phải
-// nằm trong chrome.storage. Thứ duy nhất giữ trong bộ nhớ là số đếm cho huy
-// hiệu của từng tab — mất thì huy hiệu về 0, không hỏng gì.
+// Service worker MV3 bị tắt bất cứ lúc nào nên mọi thứ cần sống lâu phải nằm
+// trong chrome.storage. Chỉ số đếm huy hiệu của từng tab giữ trong bộ nhớ.
 
 const KEY_ENABLED = "bab_enabled";
 const KEY_ALLOWLIST = "bab_allowlist";
@@ -26,8 +25,6 @@ const ALLOW_RULE_BASE = 900000;
 // tabId -> số lần chặn trong lần tải trang hiện tại.
 const tabHits = new Map();
 
-// ===== Đọc ghi trạng thái =====
-
 const getState = async () => {
   const res = await chrome.storage.local.get([KEY_ENABLED, KEY_ALLOWLIST, KEY_OPTS, KEY_STATS]);
   return {
@@ -46,8 +43,8 @@ const hostOf = (url) => {
   }
 };
 
-// So khớp cả tên miền con: bỏ qua "vnexpress.net" thì "video.vnexpress.net"
-// cũng phải được bỏ qua, nếu không người dùng phải thêm tay từng tên miền con.
+// Khớp cả tên miền con: bỏ qua "example.com" thì "video.example.com" cũng phải
+// được bỏ qua.
 const inAllowlist = (host, allowlist) => {
   if (!host) return false;
   for (const entry of allowlist) {
@@ -55,8 +52,6 @@ const inAllowlist = (host, allowlist) => {
   }
   return false;
 };
-
-// ===== Đồng bộ bộ luật mạng =====
 
 const syncRulesets = async (state) => {
   const want = [];
@@ -76,9 +71,8 @@ const syncRulesets = async (state) => {
   });
 };
 
-// Trang trong danh sách bỏ qua cần được tha ở CẢ tầng mạng, không chỉ ở content
-// script — bằng không thì quảng cáo vẫn không tải được và trang vẫn thủng.
-// allowAllRequests trên main_frame tha luôn mọi yêu cầu con của tài liệu đó.
+// Trang trong danh sách bỏ qua phải được tha ở CẢ tầng mạng, không chỉ ở content
+// script, bằng không quảng cáo vẫn không tải được và trang vẫn thủng.
 const syncAllowRules = async (state) => {
   const old = await chrome.declarativeNetRequest.getDynamicRules();
   const removeRuleIds = old
@@ -107,8 +101,6 @@ const syncAll = async () => {
   return state;
 };
 
-// ===== Báo trạng thái xuống các tab đang mở =====
-
 const broadcast = async (state) => {
   let tabs = [];
   try {
@@ -126,8 +118,6 @@ const broadcast = async (state) => {
       });
   }
 };
-
-// ===== Huy hiệu =====
 
 const paintBadge = (tabId) => {
   const n = tabHits.get(tabId) || 0;
@@ -153,8 +143,6 @@ const bumpStats = async (counts) => {
   await chrome.storage.local.set({ [KEY_STATS]: stats });
 };
 
-// ===== Vòng đời =====
-
 chrome.runtime.onInstalled.addListener(() => {
   chrome.storage.local.get([KEY_ENABLED, KEY_OPTS], (res) => {
     const patch = {};
@@ -179,8 +167,8 @@ chrome.tabs.onRemoved.addListener((tabId) => {
   tabHits.delete(tabId);
 });
 
-// Chỉ chạy khi extension được nạp ở dạng chưa đóng gói. Bản cài từ cửa hàng sẽ
-// không có sự kiện này, khi đó huy hiệu chỉ đếm phần content script báo về.
+// Chỉ có khi extension nạp ở dạng chưa đóng gói. Bản cài từ cửa hàng không có
+// sự kiện này, huy hiệu khi đó chỉ đếm phần content script báo về.
 if (chrome.declarativeNetRequest.onRuleMatchedDebug) {
   chrome.declarativeNetRequest.onRuleMatchedDebug.addListener((info) => {
     const tabId = info.request && info.request.tabId;
@@ -189,8 +177,6 @@ if (chrome.declarativeNetRequest.onRuleMatchedDebug) {
     bumpStats({ network: 1 });
   });
 }
-
-// ===== Thông điệp =====
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (!msg || !msg.op) return;

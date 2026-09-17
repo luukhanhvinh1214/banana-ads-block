@@ -1,7 +1,7 @@
 {
   "name": "Banana Ads Block",
   "description": "Chặn quảng cáo, tự đóng popup và bỏ qua quảng cáo video",
-  "version": "0.3.0",
+  "version": "0.5.2",
   "manifest_version": 3,
   "icons": {
     "16": "icons/icon16.png",

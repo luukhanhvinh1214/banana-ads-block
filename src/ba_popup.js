@@ -1,15 +1,7 @@
-// ===================== Lớp 3: đóng quảng cáo chèn ngang =====================
-// Loại quảng cáo phủ kín màn hình, khoá cuộn trang và bắt bấm nút X mới đi.
-// Kèm theo là hộp thoại "hãy tắt trình chặn quảng cáo" dựng lên khi lớp 1 và
-// lớp 2 đã làm xong việc.
+// Lớp 3: đóng quảng cáo chèn ngang và hộp thoại đòi tắt trình chặn.
 //
-// Quy tắc: chỉ đụng vào thứ có BẰNG CHỨNG là quảng cáo — bên trong có khung
-// của máy chủ quảng cáo, hoặc chữ đòi tắt trình chặn. Cứ thấy lớp phủ là gỡ
-// thì sẽ gỡ luôn hộp đăng nhập, hộp xác nhận tuổi và giỏ hàng.
-//
-// Popunder (cửa sổ bật phía sau) không xử ở đây. Chúng đến từ một nhúm máy chủ
-// cố định và đã bị rules/ads.json chặn từ tầng mạng — diệt ở gốc rẻ hơn nhiều
-// so với việc canh window.open.
+// Chỉ đụng vào thứ có bằng chứng là quảng cáo. Cứ thấy lớp phủ là gỡ thì sẽ gỡ
+// luôn hộp đăng nhập, hộp xác nhận tuổi và giỏ hàng.
 
 (() => {
   const CS = window.__BAB_CS__;
@@ -37,7 +29,6 @@
     'vui lòng tắt adblock',
     'tắt adblock',
     'chặn quảng cáo để tiếp tục',
-    // Hộp thoại chặn xem của chính YouTube
     'trình chặn quảng cáo trên youtube',
     'ad blockers are not allowed',
     'ad blocker detected',
@@ -55,12 +46,10 @@
     '[class*="close" i],[id*="close" i],[aria-label*="close" i],' +
     '[aria-label*="đóng" i],[title*="close" i],[title*="đóng" i],' +
     '.dismiss,[class*="dismiss" i],button.btn-close,' +
-    // Không phải nút đóng nào cũng tự nhận là "close". Dải quảng cáo dính trên
-    // animevietsub.zip dùng <a href="javascript:hide_catfix()">X</a>.
     '[class*="hide" i],[id*="hide" i],a[href^="javascript:"]';
 
-  // Chữ trên nút đóng. Lọc thêm bằng cái này vì các selector ở trên, nhất là
-  // a[href^="javascript:"], bắt cả những liên kết bình thường của trang.
+  // Lọc thêm bằng chữ vì các selector trên, nhất là a[href^="javascript:"],
+  // bắt cả liên kết bình thường của trang.
   const CLOSE_TEXT = /^(x|×|✕|✖|❌|close|đóng|tắt|bỏ qua|skip)$/i;
 
   const MARK = 'data-bab-killed';
@@ -68,6 +57,7 @@
   let observer = null;
   let scheduled = 0;
   let on = false;
+  let banners = true;
   let queue = [];
 
   const text = (el) => (el.innerText || el.textContent || '').toLowerCase();
@@ -75,8 +65,7 @@
   const trimText = (el) => (el.innerText || el.textContent || '').replace(/\s+/g, ' ').trim();
 
   const looksAntiAdblock = (el) => {
-    // Hộp thoại đòi tắt trình chặn luôn ngắn. Giới hạn độ dài để không quét cả
-    // một bài báo viết về chủ đề chặn quảng cáo rồi xoá mất bài.
+    // Giới hạn độ dài để không xoá nhầm một bài báo viết về chủ đề chặn quảng cáo.
     const t = text(el);
     if (t.length > 600) return false;
     for (const phrase of ANTI_ADBLOCK) {
@@ -105,22 +94,12 @@
     return coversViewport || floatsHigh;
   };
 
-  // Nhận quảng cáo theo HÌNH DẠNG, không theo tên miền hay tên lớp.
-  //
-  // Cần đến nó vì loại quảng cáo phiền nhất lại không để lại dấu vết nào ở hai
-  // lớp kia: trang tự phục vụ ảnh từ tên miền của mình nên bộ luật mạng không
-  // có gì để chặn, và đặt tên lớp riêng nên danh sách selector không đoán
-  // được. Đo trên animevietsub.zip: một dải dính đáy màn hình, class
-  // "pc-catfixx", z-index 99990, bên trong chỉ có hai tấm ảnh bọc liên kết
-  // sang yo88chinhhang.com và go88.adqc.net.
-  //
-  // Dấu hiệu chung của loại này: nổi lên trên cùng, toàn ảnh dẫn sang tên miền
-  // khác, và gần như không có chữ. Chính chỗ "không có chữ" tách nó khỏi băng
-  // cookie và hộp đăng nhập — những thứ tuyệt đối không được đụng vào.
+  // Dải dính màn hình do trang tự phục vụ ảnh: không có gì để chặn ở tầng mạng
+  // và tên lớp thì riêng. Nhận theo hình dạng, và chỗ "không có chữ" là thứ
+  // tách nó khỏi băng cookie với hộp đăng nhập.
   const MAX_AD_TEXT = 120;
 
   const isAdBanner = (el) => {
-    // Có ô nhập liệu nghĩa là biểu mẫu thật: đăng nhập, tìm kiếm, đồng ý cookie.
     if (el.querySelector('input, textarea, select, form')) return false;
 
     const body = trimText(el);
@@ -148,18 +127,62 @@
     return external > 0;
   };
 
-  // Bấm nút đóng của chính quảng cáo trước khi gỡ tay. Nhiều mạng quảng cáo
-  // dựng lại lớp phủ ngay khi thấy nút của mình biến mất mà chưa được bấm;
-  // bấm đúng nút thì chúng coi như đã xong lượt hiển thị và thôi.
+  // Lớp phủ khuyến mãi do CHÍNH trang phục vụ, mọi liên kết đều cùng tên miền
+  // nên isAdBanner bỏ lọt hết. Ba điều kiện tách nó khỏi lớp phủ thật:
+  //   - hộp đăng nhập và băng cookie luôn có ô nhập hoặc chữ thật trong DOM
+  //   - khung xem ảnh phóng to cũng là ảnh lớn không chữ, nhưng ảnh của nó
+  //     KHÔNG bọc trong <a href>; ảnh quảng cáo thì luôn bọc
+  //   - phải nổi lên trên nội dung, không phải khối absolute trong dòng chảy
+  const MAX_SPLASH_TEXT = 24;
+  const MIN_SPLASH_SIDE = 150;
+  const MIN_SPLASH_AREA = 60000;
+
+  // Không đo bằng hộp của chính thẻ <a>: thẻ <a> là inline nên bọc quanh <img>
+  // block thì hộp xẹp còn đúng chiều cao dòng chữ.
+  const mediaBox = (a) => {
+    let best = null;
+    let area = 0;
+    for (const m of a.querySelectorAll('img, picture, video')) {
+      const r = m.getBoundingClientRect();
+      if (r.width * r.height > area) {
+        best = r;
+        area = r.width * r.height;
+      }
+    }
+    return best;
+  };
+
+  const isImageSplash = (el) => {
+    let style;
+    try {
+      style = getComputedStyle(el);
+    } catch (e) {
+      return false;
+    }
+    if (style.position !== 'fixed' && (parseInt(style.zIndex, 10) || 0) < 100) return false;
+    if (el.querySelector('input, textarea, select, form')) return false;
+    if (trimText(el).length > MAX_SPLASH_TEXT) return false;
+
+    for (const a of el.querySelectorAll('a[href]')) {
+      if (trimText(a).length > 3) continue;
+      const box = mediaBox(a);
+      if (!box) continue;
+      if (box.width < MIN_SPLASH_SIDE || box.height < MIN_SPLASH_SIDE) continue;
+      if (box.width * box.height >= MIN_SPLASH_AREA) return true;
+    }
+    return false;
+  };
+
+  // Bấm nút đóng của chính quảng cáo trước khi gỡ tay: nhiều mạng dựng lại lớp
+  // phủ khi thấy nút của mình biến mất mà chưa được bấm.
   const clickClose = (el) => {
     const buttons = el.querySelectorAll(CLOSE_BUTTON);
     for (const btn of buttons) {
       const rect = btn.getBoundingClientRect();
       if (rect.width > 120 || rect.height > 120) continue;
       const label = trimText(btn);
-      // Nút đóng thật thì hoặc không có chữ (chỉ là hình chữ thập), hoặc có
-      // đúng một chữ ngắn. Liên kết dài là liên kết thật của quảng cáo, bấm
-      // vào là mở đúng cái trang mà ta đang cố tránh.
+      // Liên kết có chữ dài là liên kết thật của quảng cáo, bấm vào là mở đúng
+      // trang đang cố tránh.
       if (label.length > 8 && !CLOSE_TEXT.test(label)) continue;
       try {
         btn.click();
@@ -169,8 +192,23 @@
     return false;
   };
 
-  // Lớp phủ đi rồi mà trang vẫn không cuộn được: mã của quảng cáo khoá cuộn
-  // rồi chết giữa chừng, không kịp mở lại.
+  // Có nơi dùng một <div> tên lớp ngẫu nhiên bọc <svg> vẽ hai nét chéo, không
+  // nhãn, không chữ. Chỉ còn hình dạng để khớp.
+  const clickGlyphClose = (el) => {
+    for (const svg of el.querySelectorAll('svg')) {
+      const host = svg.parentElement;
+      if (!host || host.closest('a[href]')) continue;
+      const rect = host.getBoundingClientRect();
+      if (rect.width < 8 || rect.width > 60 || rect.height < 8 || rect.height > 60) continue;
+      if (trimText(host).length) continue;
+      try {
+        host.click();
+        return true;
+      } catch (e) {}
+    }
+    return false;
+  };
+
   const unlockScroll = () => {
     for (const el of [document.documentElement, document.body]) {
       if (!el) continue;
@@ -193,7 +231,7 @@
     if (el.hasAttribute(MARK)) return 0;
     el.setAttribute(MARK, '1');
 
-    if (!clickClose(el)) {
+    if (!clickClose(el) && !clickGlyphClose(el)) {
       el.style.setProperty('display', 'none', 'important');
     } else {
       // Bấm xong vẫn còn đó nghĩa là nút kia không phải nút đóng thật.
@@ -207,6 +245,8 @@
     }
 
     unlockScroll();
+    // Lượt thứ hai vì có trang khoá cuộn ở nhịp render SAU lúc lớp phủ vào DOM.
+    setTimeout(unlockScroll, 500);
     return 1;
   };
 
@@ -215,24 +255,31 @@
     if (el === document.body || el === document.documentElement) return 0;
     if (!isOverlay(el)) return 0;
 
-    // Ba đường nhận diện, chỉ cần một đường ăn. Không đường nào ăn thì để yên:
-    // gỡ một lớp phủ không rõ lai lịch là gỡ nhầm hộp đăng nhập.
+    // Bốn đường nhận diện, chỉ cần một đường ăn. Không đường nào ăn thì để yên.
     const evidence =
-      el.querySelector(AD_INSIDE) || looksAntiAdblock(el) || isAdBanner(el);
+      el.querySelector(AD_INSIDE) ||
+      looksAntiAdblock(el) ||
+      isAdBanner(el) ||
+      (banners && isImageSplash(el));
     if (!evidence) return 0;
 
     return kill(el);
   };
 
-  // Lớp phủ hay được bọc trong một thẻ chứa, và bộ theo dõi chỉ báo về thẻ
-  // ngoài cùng vừa được thêm. Soi thêm một tầng con là đủ cho gần hết các
-  // trường hợp mà không phải duyệt cả cây.
   const checkWithChildren = (el) => {
     let n = check(el);
     if (el && el.nodeType === 1 && el.children) {
       for (const child of el.children) n += check(child);
     }
     return n;
+  };
+
+  const topOfViewport = () => {
+    try {
+      return document.elementsFromPoint(innerWidth / 2, innerHeight / 2);
+    } catch (e) {
+      return [];
+    }
   };
 
   const sweep = () => {
@@ -243,14 +290,15 @@
     queue = [];
     let n = 0;
 
+    // Ba đường quét vì lớp phủ có thể nằm ngoài tầm của bộ theo dõi: đã có sẵn
+    // trong HTML, hoặc chèn sâu trong cây. Thứ chắn đường người dùng thì phải
+    // nằm giữa màn hình, và hỏi một điểm rẻ hơn nhiều so với duyệt cả cây.
     try {
       for (const el of batch) n += checkWithChildren(el);
-      // Lớp phủ hay được gắn thẳng vào body, và có khi đã nằm sẵn trong HTML
-      // trước lúc bộ theo dõi kịp chạy. Phần tử position:fixed gần như bắt
-      // buộc phải là con trực tiếp của body để bám theo khung nhìn.
       if (document.body) {
         for (const el of document.body.children) n += check(el);
       }
+      for (const el of topOfViewport()) n += check(el);
     } catch (e) {}
 
     CS.report('popup', n);
@@ -290,6 +338,7 @@
   };
 
   CS.onChange((active, opts) => {
+    banners = opts.banners !== false;
     if (active && opts.popup !== false) start();
     else stop();
   });

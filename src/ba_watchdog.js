@@ -1,15 +1,5 @@
-// ===================== Lớp 4: quảng cáo video =====================
-// Lưới an toàn cho khi lớp cắt dữ liệu (src/ba_prune.js) không kịp hoặc không
-// áp dụng được: YouTube đổi tên nhánh, quảng cáo được ghép thẳng vào luồng
-// video từ máy chủ, hoặc trang không phải YouTube.
-//
-// Thứ tự xử, từ nhẹ tới nặng:
-//   1. Có nút "Bỏ qua" thì bấm — sạch nhất, trình phát tự chuyển tiếp.
-//   2. Không có nút thì tắt tiếng, tăng tốc độ phát lên 16 lần và tua thẳng
-//      tới cuối đoạn quảng cáo.
-//
-// Tắt tiếng và tốc độ phát đều được khôi phục khi quảng cáo kết thúc. Bỏ bước
-// khôi phục là người dùng xem hết video trong im lặng mà không hiểu vì sao.
+// Lớp 4: bỏ qua quảng cáo video. Có nút "Bỏ qua" thì bấm, không có thì tắt
+// tiếng và tua tới cuối đoạn quảng cáo.
 
 (() => {
   const CS = window.__BAB_CS__;
@@ -31,8 +21,7 @@
     '.close-padded-button',
   ].join(',');
 
-  // Dấu hiệu trình phát đang chiếu quảng cáo, gom từ YouTube, video.js và
-  // JW Player — ba bộ chiếm gần hết các trang video phổ thông.
+  // Dấu hiệu trình phát đang chiếu quảng cáo, gom từ YouTube, video.js, JW Player.
   const AD_PLAYING = [
     '.ad-showing',
     '.ad-interrupting',
@@ -47,9 +36,8 @@
   let on = false;
   let skipped = 0;
 
-  // Trạng thái mượn của trình phát, để trả lại đúng cái đã mượn. Giữ cả tham
-  // chiếu tới thẻ video: trang nào thay thẻ video giữa chừng mà ta đi tìm lại
-  // bằng querySelector thì sẽ bỏ tiếng tắt trên thẻ cũ không ai gỡ.
+  // Giữ tham chiếu tới thẻ video đã mượn, không tìm lại bằng querySelector:
+  // trang thay thẻ video giữa chừng thì tiếng tắt trên thẻ cũ không ai gỡ.
   let adActive = false;
   let borrowed = null;
   let savedMuted = null;
@@ -92,8 +80,7 @@
     if (savedMuted === null) savedMuted = video.muted;
     if (savedRate === null) savedRate = video.playbackRate;
     video.muted = true;
-    // Tốc độ cao là cách dự phòng cho những trình phát chặn việc tua. Đặt xong
-    // vẫn tua tiếp ở dưới; cái nào ăn thì ăn.
+    // Dự phòng cho trình phát chặn việc tua.
     try {
       video.playbackRate = 16;
     } catch (e) {}
@@ -128,9 +115,8 @@
   const tick = () => {
     if (!on) return;
 
-    // Cửa rẻ nhất: không có thẻ video nào thì không có gì để canh. Bộ đếm này
-    // chạy trên MỌI trang đang mở, nên một truy vấn thừa mỗi nửa giây nhân lên
-    // theo số tab là thấy ngay.
+    // Cửa rẻ nhất. Bộ đếm chạy trên mọi tab nên một truy vấn thừa mỗi nửa giây
+    // nhân lên theo số tab là thấy ngay.
     if (!document.querySelector('video')) {
       if (adActive) {
         adActive = false;
@@ -182,8 +168,8 @@
     clearInterval(timer);
     timer = 0;
     adActive = false;
-    // Không kèm điều kiện: tắt tiện ích giữa lúc đang tua một đoạn quảng cáo
-    // mà quên trả tiếng thì người dùng ngồi xem tiếp trong im lặng.
+    // Không kèm điều kiện: tắt tiện ích giữa lúc đang tua mà quên trả tiếng thì
+    // người dùng xem tiếp trong im lặng.
     giveBack();
   };
 

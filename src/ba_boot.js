@@ -1,5 +1,5 @@
-// ===================== Khởi động MAIN world =====================
-// Nhận trạng thái bật/tắt từ ISOLATED world và mở một cửa nhỏ cho Console.
+// Khởi động MAIN world: nhận trạng thái bật tắt từ ISOLATED world và mở một
+// cửa nhỏ cho Console.
 
 (() => {
   const NS = window.__BAB__;
@@ -21,8 +21,8 @@
     }
   });
 
-  // Hỏi ngay, vì ISOLATED world có thể đã đọc xong storage trước khi file này
-  // kịp gắn listener ở trên.
+  // Hỏi ngay, vì ISOLATED world có thể đã đọc xong storage trước khi listener
+  // ở trên kịp gắn.
   NS.post("hello", null);
 
   window.BAB = {

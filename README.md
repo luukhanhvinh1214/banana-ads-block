@@ -1,14 +1,16 @@
 # Banana Ads Block
 
-Extension chặn quảng cáo cho Chrome (Manifest V3), do **Lưu Khánh Vinh** thực hiện.
+Extension chặn quảng cáo cho Chrome do **Lưu Khánh Vinh** xây dựng.
 
 Mọi thứ chạy trên máy bạn. Không có máy chủ, không thu thập lịch sử duyệt web.
 
-## Làm được gì
+## Chức năng
 
 - Chặn quảng cáo ngay từ tầng mạng, trước khi trình duyệt tải về.
 - Dọn banner và khung rỗng còn sót lại trên trang.
-- Đóng popup chèn ngang và mở lại thanh cuộn bị khoá.
+- Ẩn bài và khối mang nhãn tài trợ trên Facebook và TikTok.
+- Đóng popup chèn ngang, kể cả popup khuyến mãi của chính trang, và mở lại thanh
+  cuộn bị khoá.
 - Ngăn trang tự mở tab quảng cáo khi bạn bấm vào chỗ bất kỳ.
 - Bỏ qua quảng cáo video trên YouTube — chặn được thì chặn, không chặn được thì
   tua nhanh.
@@ -50,16 +52,10 @@ khó biết trang hỏng vì bên nào.
 
 Không có bộ chặn nào đúng 100%.
 
-- YouTube đang thử ghép quảng cáo thẳng vào luồng video từ phía máy chủ. Khi đó
-  tiện ích chuyển sang tua nhanh, nên bạn vẫn thấy vài giây quảng cáo trôi qua.
-- Danh sách lọc là bản viết tay, không phải EasyList đầy đủ.
-- Quảng cáo chỉ bị gỡ khi có bằng chứng rõ ràng. Đây là lựa chọn có chủ đích:
-  gỡ bừa thì sẽ gỡ luôn hộp đăng nhập và băng xác nhận cookie.
-
 Gặp trang hiển thị sai hoặc còn sót quảng cáo thì mở một
 [issue](https://github.com/luukhanhvinh1214/banana-ads-block/issues).
 
-## Ghi công
+## Nguồn tham khảo
 
 Cách chặn và danh sách lọc tham khảo từ các dự án mã nguồn mở:
 [uBlock Origin](https://github.com/gorhill/uBlock),

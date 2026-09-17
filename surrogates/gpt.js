@@ -1,19 +1,13 @@
-// Bản thế thân cho Google Publisher Tag (gpt.js)
+// Bản thế thân cho Google Publisher Tag (gpt.js).
 //
-// Nhiều trang tin xếp cả việc dựng bố cục vào googletag.cmd. Chặn tệp thật mà
-// không thế chỗ thì hàng đợi đó không ai chạy: chỗ để quảng cáo vẫn trống,
-// nhưng phần nội dung lẽ ra hiện sau đó cũng đứng im luôn. Đó là kiểu "chặn
-// quảng cáo làm vỡ trang" khó lần ra nhất.
-//
-// Bản này chạy hết hàng đợi và trả về các đối tượng rỗng đủ hình dạng để
-// chuỗi gọi nối đuôi của GPT không ném lỗi.
+// Nhiều trang xếp cả việc dựng bố cục vào googletag.cmd, nên chặn tệp thật mà
+// không thế chỗ thì phần nội dung bình thường của trang cũng đứng im.
 
 (() => {
   if (window.googletag && window.googletag.apiReady) return;
 
   const noopFn = () => {};
-  // Trả về chính nó để những chuỗi gọi kiểu .addService().setTargeting() chạy
-  // được tới cuối mà không cần biết từng hàm làm gì.
+  // Trả về chính nó để chuỗi gọi kiểu .addService().setTargeting() chạy tới cuối.
   const chain = () => proxy;
 
   const proxy = new Proxy(
@@ -78,8 +72,6 @@
 
   const googletag = {
     apiReady: true,
-    // pubadsReady để false: trang nào chờ cờ này mới gọi refresh() thì thôi
-    // không gọi, đỡ được một vòng chờ vô ích.
     pubadsReady: true,
     cmd: [],
     defineSlot: (path, sizes, div) => makeSlot(path, sizes, div),
@@ -106,8 +98,8 @@
     secureSignalProviders: [],
   };
 
-  // Hàng đợi có thể đã đầy trước khi tệp này về. Sau khi chạy hết, thay push
-  // bằng bản chạy ngay để những lệnh đến sau không nằm chờ mãi.
+  // Phải chạy hết hàng đợi cũ RỒI mới thay push, nếu không những gì trang xếp
+  // vào trước khi tệp này về sẽ nằm chờ mãi.
   const pending = (window.googletag && window.googletag.cmd) || [];
 
   googletag.cmd.push = function (fn) {

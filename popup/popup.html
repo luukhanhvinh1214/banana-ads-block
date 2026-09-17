@@ -16,7 +16,7 @@
 
     <div class="title">
         <h1>Banana Ads Block</h1>
-        <span class="version">v0.3.0</span>
+        <span class="version">v0.5.2</span>
         <p class="tagline">Chặn quảng cáo, popup chèn ngang và bỏ qua quảng cáo video.</p>
     </div>
 
@@ -71,7 +71,9 @@
             <input type="checkbox" id="opt-cosmetic" checked>
             <span>
                 <b>Dọn khối quảng cáo</b>
-                <i>Ẩn banner và khung rỗng còn sót lại sau khi chặn ở tầng mạng.</i>
+                <i>Ẩn banner và khung rỗng còn sót lại sau khi chặn ở tầng mạng. Ẩn cả bài và khối mang nhãn
+                    tài trợ trên Facebook và TikTok — loại này nằm cùng tên miền với trang nên tầng mạng không
+                    chặn được.</i>
             </span>
         </label>
         <label class="opt">
@@ -79,14 +81,16 @@
             <span>
                 <b>Ẩn banner ảnh quảng cáo</b>
                 <i>Nhận theo hình dạng: ảnh dẫn sang trang khác, không kèm chữ. Bắt được loại quảng cáo mà trang
-                    tự phục vụ từ tên miền của mình. Đây là phần đoán nhiều nhất — tắt nếu trang mất ảnh thật.</i>
+                    tự phục vụ từ tên miền của mình, kể cả khi nó phủ kín màn hình. Đây là phần đoán nhiều nhất
+                    — tắt nếu trang mất ảnh thật.</i>
             </span>
         </label>
         <label class="opt">
             <input type="checkbox" id="opt-popup" checked>
             <span>
                 <b>Đóng popup chèn ngang</b>
-                <i>Gỡ lớp phủ kín màn hình, mở lại thanh cuộn bị khoá.</i>
+                <i>Gỡ lớp phủ kín màn hình, kể cả popup khuyến mãi của chính trang, rồi mở lại thanh cuộn bị
+                    khoá. Hộp đăng nhập, băng cookie và khung xem ảnh phóng to vẫn giữ nguyên.</i>
             </span>
         </label>
         <label class="opt">
@@ -121,17 +125,6 @@
         <ul style="margin-top:10px">
             <li>Mọi thứ chạy <b>trên máy bạn</b>. Không có máy chủ, không gửi lịch sử duyệt web đi đâu.</li>
             <li>Đổi cài đặt xong nên <b>tải lại trang</b> để áp dụng đầy đủ.</li>
-        </ul>
-    </section>
-
-    <section>
-        <h2>Kiểm tra nhanh</h2>
-        <p>Mở DevTools (<code>F12</code>) trên trang bất kỳ và gõ:</p>
-        <ul>
-            <li><code>BAB.stats()</code> — số nhánh quảng cáo đã cắt, số tab quảng cáo đã chặn</li>
-            <li><code>BAB.hooked()</code> — các điểm đã chen được vào</li>
-            <li><code>BAB.shield()</code> — các lớp chống dò đang đặt</li>
-            <li><code>BAB.debug(true)</code> — bật nhật ký ra Console</li>
         </ul>
     </section>
 

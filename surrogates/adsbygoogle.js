@@ -1,20 +1,15 @@
-// Bản thế thân cho pagead2.googlesyndication.com/pagead/js/adsbygoogle.js
+// Bản thế thân cho adsbygoogle.js.
 //
-// Chặn thẳng tệp này thì yêu cầu hỏng, thẻ script bắn onerror, và biến
-// window.adsbygoogle không bao giờ ra đời. Cả hai đều là dấu hiệu mà trang
-// dùng để kết luận có trình chặn quảng cáo.
-//
-// Bản này dựng đúng bộ khung mà trang trông đợi rồi không làm gì thêm: không
-// tải quảng cáo, không gọi ra ngoài. Với trang thì mọi thứ đã chạy xong bình
-// thường và chẳng có ô nào được lấp.
+// Chặn thẳng tệp này thì thẻ script bắn onerror và window.adsbygoogle không ra
+// đời — cả hai đều là dấu hiệu để trang kết luận có trình chặn quảng cáo. Bản
+// này dựng đúng bộ khung trang trông đợi rồi không làm gì thêm.
 
 (() => {
   if (window.adsbygoogle && window.adsbygoogle.loaded) return;
 
   const queue = Array.isArray(window.adsbygoogle) ? window.adsbygoogle : [];
 
-  // AdSense đánh dấu thẻ <ins> đã xử lý bằng thuộc tính này. Trang nào tự soi
-  // lại thuộc tính đó để biết quảng cáo có hiện hay không sẽ thấy "done".
+  // Trang tự soi thuộc tính này để biết quảng cáo có hiện hay không.
   const markSlots = () => {
     for (const ins of document.querySelectorAll("ins.adsbygoogle")) {
       if (!ins.getAttribute("data-adsbygoogle-status")) {
@@ -26,8 +21,6 @@
   const adsbygoogle = {
     loaded: true,
     push(item) {
-      // Cấu hình trang (enable_page_level_ads, pauseAdRequests...) chỉ cần
-      // nuốt. Mỗi lần push một ô quảng cáo thì đánh dấu là đã xử lý.
       markSlots();
       if (item && typeof item === "object" && typeof item.google_ad_client === "string") {
         window.google_ad_client = item.google_ad_client;
