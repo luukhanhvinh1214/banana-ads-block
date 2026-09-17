@@ -352,11 +352,17 @@
     return false;
   };
 
+  // Facebook chèn hàng chục nút chữ mồi vào trước phần đầu bài: đo trên feed
+  // thật thấy 33 nút "Facebook" lặp lại rồi mới tới tên người đăng, nhãn rơi
+  // xuống nút thứ 38. Trần 80 như trước là bài nào đệm dày hơn thì thoát hẳn,
+  // và thoát hẳn thì không lượt quét nào sau đó bắt lại được.
+  const FB_TEXT_MAX = 600;
+
   const fbPostIsAd = (post) => {
     const walker = document.createTreeWalker(post, NodeFilter.SHOW_TEXT);
     let node;
     let seen = 0;
-    while ((node = walker.nextNode()) && seen++ < 80) {
+    while ((node = walker.nextNode()) && seen++ < FB_TEXT_MAX) {
       if (isFbLabel(node.nodeValue)) return true;
     }
 
@@ -409,9 +415,10 @@
     return ref ? fbHideFrom(ref) : 0;
   };
 
-  // Trần số nút xét trong một lượt. Facebook dựng lại cả vùng feed trong một
-  // tác vụ khi cuộn nhanh, không chặn thì lượt này kéo dài ngay giữa đường vẽ.
-  const FB_LIVE_BUDGET = 300;
+  // Trần cho một lượt. Facebook dựng lại cả vùng feed trong một tác vụ khi cuộn
+  // nhanh, không chặn thì lượt này kéo dài ngay giữa đường vẽ.
+  const FB_LIVE_RECORDS = 400;
+  const FB_LIVE_POSTS = 40;
 
   // Chạy thẳng trong callback của MutationObserver. Callback đó tới ở cuối tác
   // vụ vừa đổi DOM, trước lượt vẽ kế tiếp, nên bài quảng cáo bị ẩn mà chưa kịp
@@ -421,20 +428,21 @@
   // Đổi lại, mã trong này chỉ được đụng vào đúng phần DOM vừa đổi.
   const fbLive = (records) => {
     let n = 0;
-    let budget = FB_LIVE_BUDGET;
+    let seen = FB_LIVE_RECORDS;
+    let deep = FB_LIVE_POSTS;
 
     for (const rec of records) {
-      if (budget <= 0) break;
+      if (seen <= 0) break;
 
       if (rec.type === 'attributes') {
-        budget--;
+        seen--;
         if (fbRefIsAd(rec.target)) n += fbHideFrom(rec.target);
         continue;
       }
 
       for (const node of rec.addedNodes) {
-        if (budget <= 0) break;
-        budget--;
+        if (seen <= 0) break;
+        seen--;
 
         if (node.nodeType === 3) {
           if (isFbLabel(node.nodeValue)) n += fbLabelAppeared(node.parentElement);
@@ -450,24 +458,22 @@
           continue;
         }
 
+        if (deep <= 0) continue;
+
         const posts = node.matches(FB_POST) ? [node] : node.querySelectorAll(FB_POST);
         if (posts.length) {
-          budget -= posts.length;
           for (const post of posts) {
+            if (deep-- <= 0) break;
             if (!post.hasAttribute(MARK) && fbPostIsAd(post)) n += hide(post);
           }
           continue;
         }
 
-        // Một mảnh nhỏ gắn thêm vào bài đã nằm sẵn trong DOM.
-        const refs = node.querySelectorAll(FB_REFS);
-        budget -= refs.length;
-        for (const el of refs) {
-          if (fbRefIsAd(el)) {
-            n += fbHideFrom(el);
-            break;
-          }
-        }
+        // Mảnh gắn thêm vào bài đã nằm sẵn trong DOM. Facebook chỉ dựng nội
+        // dung bài khi nó sắp vào tầm mắt, nên đây mới là lúc nhãn xuất hiện
+        // lúc người dùng cuộn tới. Phải soi cả chữ lẫn con trỏ.
+        deep--;
+        if (fbPostIsAd(node)) n += fbHideFrom(node);
       }
     }
 
