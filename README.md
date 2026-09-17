@@ -1,8 +1,8 @@
 # Banana Ads Block
 
-Extension chặn quảng cáo cho Chrome do **Lưu Khánh Vinh** xây dựng.
+Extension chặn quảng cáo cho Chrome do **Vinhdeptrai** xây dựng.
 
-Mọi thứ chạy trên máy bạn. Không có máy chủ, không thu thập lịch sử duyệt web.
+Mọi thứ chạy trên máy bạn, an toàn, bảo mật, không thu thập lịch sử duyệt web.
 
 ## Chức năng
 
@@ -28,8 +28,6 @@ git clone https://github.com/luukhanhvinh1214/banana-ads-block.git
 3. Bấm **Tải tiện ích đã giải nén** và chọn thư mục vừa clone
 4. Tải lại các tab đang mở
 
-Không cần `npm install`, không có bước build.
-
 ## Sử dụng
 
 Bấm vào icon trên thanh công cụ:
@@ -41,8 +39,6 @@ Bấm vào icon trên thanh công cụ:
   không ăn thì tắt bớt một lớp rồi tải lại trang.
 - **Chặn thêm mã theo dõi** — mặc định tắt. Mạnh tay hơn nhưng một số trang có
   thể đăng nhập lỗi hoặc không phát được video.
-
-Huy hiệu trên icon là số lần chặn trong lần tải trang hiện tại.
 
 Nếu máy bạn đang chạy một trình chặn quảng cáo khác, nhất là loại cài ở tầng hệ
 thống chứ không phải extension, hãy tắt nó. Hai bộ lọc chồng lên nhau thì rất
