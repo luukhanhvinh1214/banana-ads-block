@@ -373,18 +373,33 @@
     return false;
   };
 
-  // Leo từ nhãn lên tổ tiên đầu tiên CÓ CHỨA liên kết; các tầng dưới chỉ bọc
-  // mỗi dòng tiêu đề. Chặn theo kích thước là bắt buộc: thêm một tầng nữa là
-  // khung ôm cả trang, ẩn nhầm thành màn hình trắng.
-  const fbAdBox = (label) => {
-    let node = label;
+  // Cột phải gom "Được tài trợ", "Sinh nhật" và "Người liên hệ" vào chung một
+  // thẻ chỉ rộng 300px, nên chặn theo kích thước không cứu được. Tiêu đề của
+  // mục khác mới là ranh giới: thẻ nào chứa nó thì thẻ đó không phải quảng cáo.
+  const fbHasOtherHeading = (el) => {
+    for (const h of el.querySelectorAll('h3')) {
+      if (!isFbLabel(h.textContent)) return true;
+    }
+    return false;
+  };
+
+  // Khối quảng cáo là tầng thấp nhất vừa có liên kết vừa không chứa tiêu đề của
+  // mục khác. Xét từ chính thẻ được đưa vào: nhánh fbLive đưa vào cả mảng DOM
+  // vừa dựng, mà mảng đó nhiều khi đã là khối cần ẩn.
+  //
+  // Quảng cáo dựng liên kết sau nhãn vài trăm mili giây. Lượt quét rơi vào
+  // quãng đó thì không tầng nào hợp lệ và trả rỗng là đúng: ẩn tạm khung bọc
+  // thì mục "Sinh nhật" dựng sau sẽ nằm trong đó và mất theo. Lượt quét sau bắt
+  // lại đúng khối.
+  const fbAdBox = (start) => {
+    let node = start;
     for (let i = 0; i < 14; i++) {
+      if (node.querySelector('a[href]') && !fbHasOtherHeading(node)) return node;
       const parent = node.parentElement;
       if (!parent || parent === document.body || parent === document.documentElement) return null;
-      node = parent;
-      const rect = node.getBoundingClientRect();
+      const rect = parent.getBoundingClientRect();
       if (rect.width > innerWidth * 0.6 || rect.height > innerHeight * 2) return null;
-      if (node.querySelector('a[href]')) return node;
+      node = parent;
     }
     return null;
   };

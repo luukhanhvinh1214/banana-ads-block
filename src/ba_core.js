@@ -8,7 +8,7 @@
   if (window.__BAB__) return;
 
   const NS = {
-    VERSION: "0.5.4",
+    VERSION: "0.5.6",
 
     // Mặc định bật để không bỏ lọt trong lúc chờ storage. ISOLATED world ghi đè
     // ngay khi đọc xong.

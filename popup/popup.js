@@ -43,14 +43,6 @@ const renderSite = () => {
   siteBtn.textContent = siteAllowed ? "Bật lại cho trang này" : "Bỏ qua trang này";
 };
 
-const renderStats = (stats, tabHits) => {
-  $("stat-network").textContent = stats.network || 0;
-  $("stat-cosmetic").textContent = stats.cosmetic || 0;
-  $("stat-popup").textContent = stats.popup || 0;
-  $("stat-video").textContent = stats.video || 0;
-  $("tab-hits").textContent = "Tab này: " + (tabHits || 0);
-};
-
 const load = async () => {
   const state = await send({ op: "state" });
   if (!state) return;
@@ -58,7 +50,6 @@ const load = async () => {
   siteAllowed = !!state.siteAllowed;
   renderPower(state.enabled);
   renderSite();
-  renderStats(state.stats || {}, state.tabHits);
   for (const name of OPTS) {
     $("opt-" + name).checked = state.opts[name] !== false;
   }
@@ -88,10 +79,5 @@ for (const name of OPTS) {
     send({ op: "setOpt", name, value: event.target.checked });
   });
 }
-
-$("reset-stats").addEventListener("click", async () => {
-  const res = await send({ op: "resetStats" });
-  if (res && res.ok) renderStats(res.stats, 0);
-});
 
 load();
