@@ -76,12 +76,18 @@
   provide("blockAdBlock", new Detector());
 
   let lastClick = 0;
-  let clickOnLink = false;
+  let clickedLinkHost = "";
 
   const noteClick = (event) => {
     lastClick = Date.now();
+    clickedLinkHost = "";
     const t = event && event.target;
-    clickOnLink = !!(t && t.closest && t.closest("a[href], button, [role='button']"));
+    const link = t && t.closest ? t.closest("a[href]") : null;
+    if (!link) return;
+    try {
+      const u = new URL(link.href, location.href);
+      if (u.protocol === "http:" || u.protocol === "https:") clickedLinkHost = u.hostname;
+    } catch (e) {}
   };
 
   // Pha capture để thấy trước mã của trang, và bắt cả pointerdown vì nhiều bộ
@@ -92,22 +98,49 @@
     } catch (e) {}
   }
 
-  // Ba vế, phải đủ cả ba. Chặn window.open không điều kiện là hỏng đăng nhập
-  // bằng Google, hỏng nút chia sẻ, hỏng cổng thanh toán.
+  // Popup đăng nhập và thanh toán mở ra từ một nút không có href, đúng hình
+  // dạng của popunder. Loại khai báo kích thước cửa sổ đã được vế features cho
+  // qua; danh sách này vớt nốt số mở bằng tab thường.
+  const TRUSTED = [
+    "accounts.google.com",
+    "appleid.apple.com",
+    "facebook.com",
+    "login.microsoftonline.com",
+    "login.live.com",
+    "github.com",
+    "paypal.com",
+    "checkout.stripe.com",
+    "id.zalo.me",
+    "oauth.zaloapp.com",
+  ];
+
+  // Chặn window.open không điều kiện là hỏng đăng nhập bằng Google, hỏng nút
+  // chia sẻ, hỏng cổng thanh toán. Nên phải có đường cho những thứ đó đi.
+  //
+  // Miễn trừ theo LOẠI phần tử vừa bấm thì không dùng được: popunder phổ biến
+  // nhất hiện nay gắn một handler lên mọi phần tử của trang, và giao diện trình
+  // phát video thì gần như toàn là <button>. Chỉ còn ĐÍCH ĐẾN để phân biệt.
   const shouldBlock = (url, features) => {
     if (!NS.enabled || NS.opts.popunder === false) return false;
+    // Cửa sổ khai báo kích thước là cửa sổ trang cố ý dựng cho người dùng nhìn.
     if (features && String(features).trim()) return false;
     if (Date.now() - lastClick > 1500) return false;
-    if (clickOnLink) return false;
 
     if (!url) return true;
+    let target;
     try {
-      const target = new URL(String(url), location.href);
-      if (target.protocol !== "http:" && target.protocol !== "https:") return false;
-      return !NS.sameSite(target.hostname);
+      target = new URL(String(url), location.href);
     } catch (e) {
       return false;
     }
+    if (target.protocol !== "http:" && target.protocol !== "https:") return false;
+
+    const host = target.hostname;
+    if (NS.sameSite(host)) return false;
+    // Vừa bấm đúng một liên kết dẫn tới đó thì mở tab là ý người dùng. Popunder
+    // thì mở một địa chỉ chẳng dính gì tới chỗ vừa bấm.
+    if (clickedLinkHost && NS.sameSite(host, clickedLinkHost)) return false;
+    return !TRUSTED.some((h) => host === h || host.endsWith("." + h));
   };
 
   const harden = (win) => {

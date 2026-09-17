@@ -8,7 +8,7 @@
   if (window.__BAB__) return;
 
   const NS = {
-    VERSION: "0.5.7",
+    VERSION: "0.6.0",
 
     // Mặc định bật để không bỏ lọt trong lúc chờ storage. ISOLATED world ghi đè
     // ngay khi đọc xong.
@@ -44,11 +44,14 @@
     opts: { popunder: true },
 
     // So thẳng chuỗi hostname là sai: trang nằm ở "www.example.com" còn liên
-    // kết nội bộ trỏ tới "example.com".
-    sameSite(host) {
+    // kết nội bộ trỏ tới "example.com". Bỏ trống "base" là so với trang đang mở.
+    sameSite(host, base) {
       if (!host) return true;
       const a = String(host).replace(/^www\./, "").toLowerCase();
-      const b = location.hostname.replace(/^www\./, "").toLowerCase();
+      const b = String(base === undefined ? location.hostname : base)
+        .replace(/^www\./, "")
+        .toLowerCase();
+      if (!b) return false;
       return a === b || a.endsWith("." + b) || b.endsWith("." + a);
     },
 
