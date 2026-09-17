@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi">
 
 <head>
@@ -9,15 +9,19 @@
 
 <body>
     <header class="brand">
-        <img src="../icons/logo-lkv.png" alt="Logo LKV">
-        <div class="name">Lưu Khánh Vinh</div>
-        <div class="role">AI &amp; Software Engineer</div>
+        <div class="brand-logo">
+            <img src="../icons/logo-lkv.png" alt="Logo LKV">
+        </div>
+        <div class="brand-text">
+            <div class="name">2imKisSa</div>
+            <div class="role">AI &amp; Software Engineer</div>
+        </div>
     </header>
 
     <div class="title">
         <h1>Banana Ads Block</h1>
-        <span class="version">v0.5.6</span>
-        <p class="tagline">Chặn quảng cáo, popup chèn ngang và bỏ qua quảng cáo video.</p>
+        <span class="version">v0.5.7</span>
+        <p class="tagline">Chặn quảng cáo, popup và bỏ qua quảng cáo video.</p>
     </div>
 
     <div class="power" id="power">
@@ -45,48 +49,36 @@
             <input type="checkbox" id="opt-cosmetic" checked>
             <span>
                 <b>Dọn khối quảng cáo</b>
-                <i>Ẩn banner và khung rỗng còn sót lại sau khi chặn ở tầng mạng. Ẩn cả bài và khối mang nhãn
-                    tài trợ trên Facebook và TikTok — loại này nằm cùng tên miền với trang nên tầng mạng không
-                    chặn được.</i>
             </span>
         </label>
         <label class="opt">
             <input type="checkbox" id="opt-banners" checked>
             <span>
                 <b>Ẩn banner ảnh quảng cáo</b>
-                <i>Nhận theo hình dạng: ảnh dẫn sang trang khác, không kèm chữ. Bắt được loại quảng cáo mà trang
-                    tự phục vụ từ tên miền của mình, kể cả khi nó phủ kín màn hình. Đây là phần đoán nhiều nhất
-                    — tắt nếu trang mất ảnh thật.</i>
             </span>
         </label>
         <label class="opt">
             <input type="checkbox" id="opt-popup" checked>
             <span>
                 <b>Đóng popup chèn ngang</b>
-                <i>Gỡ lớp phủ kín màn hình, kể cả popup khuyến mãi của chính trang, rồi mở lại thanh cuộn bị
-                    khoá. Hộp đăng nhập, băng cookie và khung xem ảnh phóng to vẫn giữ nguyên.</i>
             </span>
         </label>
         <label class="opt">
             <input type="checkbox" id="opt-popunder" checked>
             <span>
                 <b>Chặn mở tab quảng cáo</b>
-                <i>Ngăn trang mở tab mới khi bạn bấm vào chỗ không phải liên kết. Nút đăng nhập bằng Google,
-                    nút chia sẻ và cổng thanh toán vẫn mở bình thường.</i>
             </span>
         </label>
         <label class="opt">
             <input type="checkbox" id="opt-video" checked>
             <span>
                 <b>Bỏ qua quảng cáo video</b>
-                <i>Bấm nút bỏ qua, không có nút thì tua nhanh qua đoạn quảng cáo.</i>
             </span>
         </label>
         <label class="opt">
             <input type="checkbox" id="opt-trackers">
             <span>
                 <b>Chặn thêm mã theo dõi</b>
-                <i>Mạnh tay hơn. Một số trang có thể đăng nhập lỗi hoặc không phát được video.</i>
             </span>
         </label>
     </section>
@@ -97,7 +89,7 @@
             Không có bộ chặn nào đúng 100%. Tôi chỉ cố gắng hết sức mình.
         </p>
         <ul style="margin-top:10px">
-            <li>Mọi thứ chạy <b>trên máy bạn</b>. Không có máy chủ, không gửi lịch sử duyệt web đi đâu.</li>
+            <li>Mọi thứ chạy trên máy bạn, an toàn, bảo mật, không gửi lịch sử duyệt web hay lộ thông tin cá nhân.</li>
             <li>Đổi cài đặt xong nên <b>tải lại trang</b> để áp dụng đầy đủ.</li>
         </ul>
     </section>
@@ -110,16 +102,10 @@
             <a href="https://www.facebook.com/saku.kisaki.73" target="_blank" rel="noopener noreferrer">Facebook</a>
             <a href="https://www.instagram.com/lukhnhvinh" target="_blank" rel="noopener noreferrer">Instagram</a>
         </div>
-        <div class="email">luukhanhvinh1214@gmail.com</div>
     </section>
 
     <footer>
         © 2026 Lưu Khánh Vinh.
-        <div class="credit">
-            Danh sách lọc và cách chặn tham khảo từ
-            <a href="https://github.com/gorhill/uBlock" target="_blank" rel="noopener noreferrer">uBlock Origin</a>
-            và <a href="https://easylist.to" target="_blank" rel="noopener noreferrer">EasyList</a>.
-        </div>
     </footer>
 
     <script src="popup.js"></script>

@@ -48,17 +48,29 @@ body {
 
 /* ===== Header thương hiệu LKV ===== */
 .brand {
+  display: grid;
+  grid-template-columns: 3fr 7fr;
+  align-items: center;
+  gap: 14px;
   background: linear-gradient(135deg, #f7d154, #fdf8e8 45%, #f0c419 75%, #e0a800);
-  padding: 18px 16px 16px;
-  text-align: center;
+  padding: 16px;
   border-bottom: 1px solid var(--line);
 }
 
+.brand-logo {
+  display: flex;
+  justify-content: center;
+}
+
 .brand img {
-  width: 96px;
+  width: 100%;
+  max-width: 96px;
   height: auto;
   display: block;
-  margin: 0 auto 6px;
+}
+
+.brand-text {
+  min-width: 0;
 }
 
 .brand .name {
