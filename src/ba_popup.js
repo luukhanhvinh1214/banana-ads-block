@@ -99,13 +99,20 @@
   // tách nó khỏi băng cookie với hộp đăng nhập.
   const MAX_AD_TEXT = 120;
 
+  // Trình phát của trang trông y hệt một tấm quảng cáo với hai phép đo dưới
+  // đây: khối absolute phủ kín khung, gần như không có chữ ngoài đồng hồ đếm
+  // giờ, và thư viện phát nào cũng kèm một liên kết ghi công ra tên miền của
+  // chính nó. Ẩn nhầm chỗ này là giấu mất bộ phim, nên nhường hẳn: quảng cáo
+  // chạy trong thẻ video đã có lớp watchdog lo bằng cách bỏ qua và tua.
+  const holdsVideo = (el) => !!el.querySelector('video');
+
   const isAdBanner = (el) => {
     if (el.querySelector('input, textarea, select, form')) return false;
 
     const body = trimText(el);
     if (body.length > MAX_AD_TEXT) return false;
 
-    const images = el.querySelectorAll('img, picture, video');
+    const images = el.querySelectorAll('img, picture');
     if (!images.length) return false;
 
     const links = el.querySelectorAll('a[href]');
@@ -142,7 +149,7 @@
   const mediaBox = (a) => {
     let best = null;
     let area = 0;
-    for (const m of a.querySelectorAll('img, picture, video')) {
+    for (const m of a.querySelectorAll('img, picture')) {
       const r = m.getBoundingClientRect();
       if (r.width * r.height > area) {
         best = r;
@@ -256,12 +263,11 @@
     if (!isOverlay(el)) return 0;
 
     // Bốn đường nhận diện, chỉ cần một đường ăn. Không đường nào ăn thì để yên.
-    const evidence =
-      el.querySelector(AD_INSIDE) ||
-      looksAntiAdblock(el) ||
-      isAdBanner(el) ||
-      (banners && isImageSplash(el));
-    if (!evidence) return 0;
+    // Hai đường đầu là bằng chứng thật nên đi thẳng; hai đường sau chỉ đọc hình
+    // dạng nên phải tránh chỗ có thẻ video.
+    const proof = el.querySelector(AD_INSIDE) || looksAntiAdblock(el);
+    const shape = !holdsVideo(el) && (isAdBanner(el) || (banners && isImageSplash(el)));
+    if (!proof && !shape) return 0;
 
     return kill(el);
   };
