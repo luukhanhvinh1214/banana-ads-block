@@ -304,6 +304,13 @@ body {
   transform: translateX(20px);
 }
 
+.block-note {
+  margin-top: 7px;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
 .block-foot {
   display: flex;
   align-items: center;

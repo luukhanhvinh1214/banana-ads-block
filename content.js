@@ -6,9 +6,10 @@
   if (window.__BAB_CS__) return;
 
   const listeners = [];
+  const adListeners = [];
 
   const NS = {
-    VERSION: "0.7.0",
+    VERSION: "0.8.0",
 
     // Bật sẵn để không bỏ lọt trong lúc chờ service worker trả lời. Trang trong
     // danh sách bỏ qua sẽ được thu dọn ở lượt apply() đầu tiên.
@@ -45,6 +46,12 @@
       try {
         window.postMessage({ __bab: true, from: "cs", op, data }, "*");
       } catch (e) {}
+    },
+
+    // Lớp dọn trang đăng ký ở đây để nhận nhà quảng cáo mà ba_fbfeed.js đọc
+    // được từ gói tin feed.
+    onAds(fn) {
+      adListeners.push(fn);
     },
   };
 
@@ -115,6 +122,14 @@
       NS.post("opts", NS.opts);
     }
     if (d.op === "pruned") NS.report("video", d.data);
+    // Nhà quảng cáo đọc được từ gói tin feed, tới trước lúc bài được vẽ.
+    if (d.op === "fbads" && Array.isArray(d.data)) {
+      for (const fn of adListeners) {
+        try {
+          fn(d.data);
+        } catch (e) {}
+      }
+    }
     // Popunder tính chung vào nhóm popup: với người dùng thì cả hai đều là thứ
     // tự nhảy ra mà họ không bảo.
     if (d.op === "popunder") NS.report("popup", d.data);

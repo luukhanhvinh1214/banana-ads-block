@@ -27,6 +27,7 @@ const blockBtn = $("block-toggle");
 const blockState = $("block-state");
 const blockCount = $("block-count");
 const blockClear = $("block-clear");
+const blockNote = $("block-note");
 
 const OPTS = ["cosmetic", "banners", "popup", "popunder", "video", "trackers"];
 
@@ -62,12 +63,14 @@ const renderBlock = () => {
   blockWrap.classList.toggle("on", blockOn);
   blockBtn.setAttribute("aria-checked", blockOn ? "true" : "false");
   blockState.textContent = blockOn
-    ? "Thấy ai đăng quảng cáo trên " + where + " là ẩn luôn mọi bài sau của họ"
+    ? "Đang bật cho " + where
     : "Đang tắt — chỉ ẩn bài quảng cáo, không đụng tới người đăng";
   blockCount.textContent = posters.length
     ? "Đã chặn " + posters.length + " tài khoản"
     : "Chưa chặn ai";
   blockClear.hidden = !posters.length;
+  // Chỉ Facebook có chỗ chặn hẳn phía máy chủ; TikTok thì không.
+  blockNote.hidden = !blockOn || site !== "facebook";
 };
 
 const load = async () => {

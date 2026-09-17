@@ -155,6 +155,11 @@
   const blocked = new Set();
   const announced = new Set();
 
+  // Nhà quảng cáo mà ba_fbfeed.js đọc được từ gói tin feed. Tập này luôn tới
+  // trước lúc bài được vẽ, nên đây là đường duy nhất ẩn kịp mà không để bài
+  // loé lên một nhịp.
+  const feedAds = new Set();
+
   const setBlocked = (list) => {
     blocked.clear();
     for (const p of list || []) {
@@ -167,6 +172,12 @@
     if (!who) return false;
     if (who.id && blocked.has(who.id.toLowerCase())) return true;
     return !!who.name && blocked.has(who.name.toLowerCase());
+  };
+
+  const isFeedAd = (who) => {
+    if (!who) return false;
+    if (who.id && feedAds.has(who.id.toLowerCase())) return true;
+    return !!who.name && feedAds.has(who.name.toLowerCase());
   };
 
   const rememberPoster = (who) => {
@@ -497,6 +508,7 @@
   };
 
   const fbPostIsAd = (post) => {
+    if (isFeedAd(fbAuthor(post))) return true;
     if (fbAdMenu(post)) return true;
 
     const walker = document.createTreeWalker(post, NodeFilter.SHOW_TEXT);
@@ -807,6 +819,22 @@
   // Cắm style ngay, đừng chờ service worker trả lời. Trang trong danh sách bỏ
   // qua sẽ được gỡ ở lượt onChange đầu tiên.
   addStyle();
+
+  // Gói tin feed tới trước lúc bài được vẽ, nên thường chưa có gì trong DOM để
+  // ẩn; fbLive sẽ bắt bài ngay khi nó vào. Lượt quét ở đây chỉ lo trường hợp
+  // ngược lại: bài đã nằm sẵn mà gói tin về sau.
+  CS.onAds((list) => {
+    const before = feedAds.size;
+    for (const who of list) {
+      if (who.id) feedAds.add(String(who.id).toLowerCase());
+      if (who.name) feedAds.add(String(who.name).toLowerCase());
+      // Gói tin nói thẳng đây là nhà quảng cáo, không cần suy từ nhãn trên bài
+      // nữa. Đây cũng là nguồn tên đầy đủ nhất cho phần chặn thật ở
+      // src/ba_fbhide.js.
+      rememberPoster(who);
+    }
+    if (feedAds.size !== before) schedule();
+  });
 
   CS.onChange((active, opts) => {
     banners = opts.banners !== false;

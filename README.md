@@ -10,6 +10,8 @@ Mọi thứ chạy trên máy bạn, an toàn, bảo mật, không thu thập l�
 - Dọn banner và khung rỗng còn sót lại trên trang.
 - Ẩn bài và khối mang nhãn tài trợ trên Facebook và TikTok, kể cả video quảng
   cáo chen vào giữa feed TikTok.
+- Riêng Facebook, đọc luôn dữ liệu feed để biết bài nào là quảng cáo trước khi
+  nó kịp hiện ra, nên bài tài trợ không còn loé lên một nhịp rồi mới biến mất.
 - Chặn hẳn tài khoản đăng quảng cáo trên hai trang đó, nếu bạn bật.
 - Đóng popup chèn ngang, kể cả popup khuyến mãi của chính trang, và mở lại thanh
   cuộn bị khoá.
@@ -49,6 +51,11 @@ Bấm vào icon trên thanh công cụ:
   mặc định tắt. Bật lên thì thấy ai đăng quảng cáo là nhớ tên họ lại, rồi ẩn mọi
   bài sau của họ dù bài đó không gắn nhãn quảng cáo. Danh sách lưu trên máy, xoá
   lại được bất cứ lúc nào.
+
+  Riêng Facebook còn chặn được thật phía máy chủ. Menu của bài quảng cáo không
+  có nút chặn nào, nên chỗ duy nhất làm được là **Trung tâm tài khoản**, mục
+  **Nhà quảng cáo**. Bạn mở trang đó một lần, tiện ích tự bấm ẩn giúp. Muốn bỏ
+  thì bấm **Bỏ ẩn** ngay tại đó.
 - **Các lớp chặn** — bật tắt từng lớp một. Trang nào mất ảnh thật hoặc bấm nút
   không ăn thì tắt bớt một lớp rồi tải lại trang.
 - **Chặn thêm mã theo dõi** — mặc định tắt. Mạnh tay hơn nhưng một số trang có
