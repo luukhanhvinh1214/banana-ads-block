@@ -8,7 +8,7 @@
   const listeners = [];
 
   const NS = {
-    VERSION: "0.5.2",
+    VERSION: "0.5.3",
 
     // Bật sẵn để không bỏ lọt trong lúc chờ service worker trả lời. Trang trong
     // danh sách bỏ qua sẽ được thu dọn ở lượt apply() đầu tiên.

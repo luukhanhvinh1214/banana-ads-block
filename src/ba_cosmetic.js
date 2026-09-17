@@ -298,12 +298,56 @@
   const FB_LABEL_MAX = 40;
 
   const FB_REF_ATTRS = ['aria-labelledby', 'aria-describedby'];
+  const FB_REFS = '[aria-labelledby], [aria-describedby]';
+  const FB_POST = '[aria-posinset]';
 
   const isFbLabel = (raw) => {
     const t = (raw || '').replace(FB_INVISIBLE, '').replace(/\s+/g, ' ').trim().toLowerCase();
     if (!t || t.length > FB_LABEL_MAX) return false;
     for (const label of FB_LABELS) {
       if (t === label) return true;
+    }
+    return false;
+  };
+
+  // Nhớ lại kết quả tra id để lượt sau khỏi đọc DOM lần nữa. Facebook đổi
+  // aria-labelledby liên tục, mà mỗi lần tra là một lần dựng lại chuỗi chữ của
+  // thẻ đích.
+  const fbLabelIds = new Set();
+  const fbPlainIds = new Set();
+  const FB_ID_CACHE_MAX = 4000;
+
+  const fbIsLabelId = (id) => {
+    if (fbLabelIds.has(id)) return true;
+    if (fbPlainIds.has(id)) return false;
+
+    const target = document.getElementById(id);
+    if (!target) return false;
+    const text = target.textContent;
+    if (isFbLabel(text)) {
+      fbLabelIds.add(id);
+      return true;
+    }
+
+    // Thẻ rỗng nghĩa là chữ còn đang trên đường tới. Nhớ "không phải" lúc này
+    // là khoá luôn bài đó lại.
+    if (text && text.trim()) {
+      if (fbPlainIds.size >= FB_ID_CACHE_MAX) fbPlainIds.clear();
+      fbPlainIds.add(id);
+    }
+    return false;
+  };
+
+  // Đường duy nhất bắt được bài quảng cáo trong feed: chữ nhãn không nằm trong
+  // bài. Facebook để nó trong một <span id> ẩn ở cuối body, bài chỉ giữ con trỏ
+  // aria-labelledby tới id đó.
+  const fbRefIsAd = (el) => {
+    for (const attr of FB_REF_ATTRS) {
+      const ids = el.getAttribute(attr);
+      if (!ids) continue;
+      for (const id of ids.split(/\s+/)) {
+        if (fbIsLabelId(id)) return true;
+      }
     }
     return false;
   };
@@ -316,18 +360,8 @@
       if (isFbLabel(node.nodeValue)) return true;
     }
 
-    // Đường duy nhất bắt được bài quảng cáo trong feed: chữ nhãn không nằm
-    // trong bài. Facebook để nó trong một <span id> ẩn ở cuối body, bài chỉ giữ
-    // con trỏ aria-labelledby tới id đó.
-    for (const el of post.querySelectorAll('[aria-labelledby], [aria-describedby]')) {
-      for (const attr of FB_REF_ATTRS) {
-        const ids = el.getAttribute(attr);
-        if (!ids) continue;
-        for (const id of ids.split(/\s+/)) {
-          const target = document.getElementById(id);
-          if (target && isFbLabel(target.textContent)) return true;
-        }
-      }
+    for (const el of post.querySelectorAll(FB_REFS)) {
+      if (fbRefIsAd(el)) return true;
     }
 
     return false;
@@ -349,18 +383,110 @@
     return null;
   };
 
+  // Ưu tiên khung [aria-posinset]: đó là ranh giới bài viết do chính Facebook
+  // đánh dấu, chính xác hơn mọi phép leo cây.
+  const fbHideFrom = (el) => {
+    const post = el.closest(FB_POST);
+    if (post) return hide(post);
+    const box = fbAdBox(el);
+    return box ? hide(box) : 0;
+  };
+
+  // Nhãn ẩn và con trỏ trỏ tới nó không vào DOM cùng lúc, và thứ tự không cố
+  // định. Nhánh này lo chiều nhãn tới sau; chiều ngược lại do bản ghi
+  // attributes lo.
+  const fbLabelAppeared = (el) => {
+    if (!el) return 0;
+    if (!el.id) return fbHideFrom(el);
+    fbLabelIds.add(el.id);
+    let ref = null;
+    try {
+      const id = CSS.escape(el.id);
+      ref = document.querySelector(
+        '[aria-labelledby~="' + id + '"], [aria-describedby~="' + id + '"]'
+      );
+    } catch (e) {}
+    return ref ? fbHideFrom(ref) : 0;
+  };
+
+  // Trần số nút xét trong một lượt. Facebook dựng lại cả vùng feed trong một
+  // tác vụ khi cuộn nhanh, không chặn thì lượt này kéo dài ngay giữa đường vẽ.
+  const FB_LIVE_BUDGET = 300;
+
+  // Chạy thẳng trong callback của MutationObserver. Callback đó tới ở cuối tác
+  // vụ vừa đổi DOM, trước lượt vẽ kế tiếp, nên bài quảng cáo bị ẩn mà chưa kịp
+  // hiện lên lần nào. Chờ bộ đếm giờ của sweep thì nó đã nằm trên màn hình vài
+  // trăm mili giây, và trên feed dài thì lâu hơn nữa vì sweep quét lại cả trang.
+  //
+  // Đổi lại, mã trong này chỉ được đụng vào đúng phần DOM vừa đổi.
+  const fbLive = (records) => {
+    let n = 0;
+    let budget = FB_LIVE_BUDGET;
+
+    for (const rec of records) {
+      if (budget <= 0) break;
+
+      if (rec.type === 'attributes') {
+        budget--;
+        if (fbRefIsAd(rec.target)) n += fbHideFrom(rec.target);
+        continue;
+      }
+
+      for (const node of rec.addedNodes) {
+        if (budget <= 0) break;
+        budget--;
+
+        if (node.nodeType === 3) {
+          if (isFbLabel(node.nodeValue)) n += fbLabelAppeared(node.parentElement);
+          continue;
+        }
+        if (node.nodeType !== 1) continue;
+
+        // Nhãn ẩn là một thẻ lá nên đọc textContent của nó không tốn gì. Thẻ có
+        // con thì bỏ qua, nếu không mỗi bài viết mới lại dựng lại chuỗi chữ của
+        // cả bài chỉ để so với bốn chữ.
+        if (node.childElementCount === 0) {
+          if (isFbLabel(node.textContent)) n += fbLabelAppeared(node);
+          continue;
+        }
+
+        const posts = node.matches(FB_POST) ? [node] : node.querySelectorAll(FB_POST);
+        if (posts.length) {
+          budget -= posts.length;
+          for (const post of posts) {
+            if (!post.hasAttribute(MARK) && fbPostIsAd(post)) n += hide(post);
+          }
+          continue;
+        }
+
+        // Một mảnh nhỏ gắn thêm vào bài đã nằm sẵn trong DOM.
+        const refs = node.querySelectorAll(FB_REFS);
+        budget -= refs.length;
+        for (const el of refs) {
+          if (fbRefIsAd(el)) {
+            n += fbHideFrom(el);
+            break;
+          }
+        }
+      }
+    }
+
+    return n;
+  };
+
+  // Lưới an toàn cho những gì fbLive bỏ lọt: phần DOM có sẵn từ lúc trang mở,
+  // lúc vừa bật lại tiện ích, và những lượt cuộn tiêu hết hạn mức.
   const scanFacebook = (root) => {
     let n = 0;
 
-    for (const post of root.querySelectorAll('[aria-posinset]')) {
+    for (const post of root.querySelectorAll(FB_POST)) {
       if (post.hasAttribute(MARK)) continue;
       if (fbPostIsAd(post)) n += hide(post);
     }
 
     for (const label of root.querySelectorAll('h3')) {
       if (!isFbLabel(label.textContent)) continue;
-      const box = fbAdBox(label);
-      if (box) n += hide(box);
+      n += fbHideFrom(label);
     }
 
     return n;
@@ -412,7 +538,14 @@
     if (on) return;
     on = true;
     addStyle();
-    observer = new MutationObserver(schedule);
+    observer = new MutationObserver((records) => {
+      if (IS_FACEBOOK) {
+        try {
+          CS.report('cosmetic', fbLive(records));
+        } catch (e) {}
+      }
+      schedule();
+    });
     const attach = () => {
       if (!document.documentElement) return;
       const opts = { childList: true, subtree: true };
