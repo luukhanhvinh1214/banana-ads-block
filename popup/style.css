@@ -247,6 +247,75 @@ body {
   cursor: default;
 }
 
+/* ===== Chặn tài khoản quảng cáo, chỉ hiện trên Facebook và TikTok ===== */
+.block {
+  margin: 10px 16px 0;
+  padding: 9px 13px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.block.on {
+  border-color: var(--accent);
+  background: var(--surface-alt);
+}
+
+.block-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.block-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.block-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.block-state {
+  margin-top: 2px;
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+.block.on .block-state {
+  color: var(--accent-strong);
+}
+
+.block .switch {
+  background: #a09578;
+}
+
+.block.on .switch {
+  background: var(--accent);
+}
+
+.block .knob {
+  transform: translateX(0);
+}
+
+.block.on .knob {
+  transform: translateX(20px);
+}
+
+.block-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 7px;
+  padding-top: 7px;
+  border-top: 1px solid var(--line);
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
 /* ===== Khối nội dung ===== */
 section {
   padding: 0 16px;

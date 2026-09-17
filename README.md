@@ -8,7 +8,9 @@ Mọi thứ chạy trên máy bạn, an toàn, bảo mật, không thu thập l�
 
 - Chặn quảng cáo ngay từ tầng mạng, trước khi trình duyệt tải về.
 - Dọn banner và khung rỗng còn sót lại trên trang.
-- Ẩn bài và khối mang nhãn tài trợ trên Facebook và TikTok.
+- Ẩn bài và khối mang nhãn tài trợ trên Facebook và TikTok, kể cả video quảng
+  cáo chen vào giữa feed TikTok.
+- Chặn hẳn tài khoản đăng quảng cáo trên hai trang đó, nếu bạn bật.
 - Đóng popup chèn ngang, kể cả popup khuyến mãi của chính trang, và mở lại thanh
   cuộn bị khoá.
 - Ngăn trang tự mở tab quảng cáo khi bạn bấm vào chỗ bất kỳ.
@@ -28,6 +30,15 @@ git clone https://github.com/luukhanhvinh1214/banana-ads-block.git
 3. Bấm **Tải tiện ích đã giải nén** và chọn thư mục vừa clone
 4. Tải lại các tab đang mở
 
+## Bản ổn định
+
+Nhánh `main` là bản đang sửa, có lúc chưa chạy ngon. Muốn dùng cho yên tâm thì
+tải bản ổn định ở đây:
+
+[Google Drive](https://drive.google.com/drive/folders/1hk_-QRqmFatN4ZNTmJw1FyMURhguPKpJ?usp=sharing)
+
+Tải về, giải nén, rồi làm bốn bước ở trên với thư mục vừa giải nén.
+
 ## Sử dụng
 
 Bấm vào icon trên thanh công cụ:
@@ -35,6 +46,10 @@ Bấm vào icon trên thanh công cụ:
 - **Công tắc tổng** — tắt toàn bộ tiện ích.
 - **Bỏ qua trang này** — tha đúng một tên miền và các tên miền con của nó. Dùng
   khi một trang hiển thị sai.
+- **Chặn tài khoản quảng cáo** — chỉ hiện khi bạn đang ở Facebook hoặc TikTok,
+  mặc định tắt. Bật lên thì thấy ai đăng quảng cáo là nhớ tên họ lại, rồi ẩn mọi
+  bài sau của họ dù bài đó không gắn nhãn quảng cáo. Danh sách lưu trên máy, xoá
+  lại được bất cứ lúc nào.
 - **Các lớp chặn** — bật tắt từng lớp một. Trang nào mất ảnh thật hoặc bấm nút
   không ăn thì tắt bớt một lớp rồi tải lại trang.
 - **Chặn thêm mã theo dõi** — mặc định tắt. Mạnh tay hơn nhưng một số trang có

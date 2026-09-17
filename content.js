@@ -8,13 +8,19 @@
   const listeners = [];
 
   const NS = {
-    VERSION: "0.6.1",
+    VERSION: "0.7.0",
 
     // Bật sẵn để không bỏ lọt trong lúc chờ service worker trả lời. Trang trong
     // danh sách bỏ qua sẽ được thu dọn ở lượt apply() đầu tiên.
     active: true,
     opts: { cosmetic: true, popup: true, video: true, banners: true, popunder: true },
     host: location.hostname,
+
+    // Rỗng trên mọi trang trừ facebook.com và tiktok.com. Service worker quyết
+    // định, vì chỉ nó biết khung này nằm trong tab nào.
+    site: "",
+    block: false,
+    posters: [],
 
     // Gọi luôn một lần với giá trị hiện tại để lớp đăng ký không phải tự khởi
     // động riêng.
@@ -42,9 +48,14 @@
     },
   };
 
-  const apply = (active, opts) => {
+  const apply = (active, opts, extra) => {
     NS.active = active !== false;
     if (opts) NS.opts = opts;
+    if (extra) {
+      NS.site = extra.site || "";
+      NS.block = !!extra.block;
+      NS.posters = Array.isArray(extra.posters) ? extra.posters : [];
+    }
     NS.post("enabled", NS.active);
     NS.post("opts", NS.opts);
     for (const fn of listeners) {
@@ -80,6 +91,17 @@
     if (!timer) timer = setTimeout(flush, 500);
   };
 
+  // Gửi thẳng, không gộp như report(): mỗi nhà quảng cáo chỉ gửi một lần trong
+  // suốt đời trang, và gửi muộn thì bài kế tiếp của họ đã kịp hiện ra.
+  NS.addPoster = (id, name) => {
+    if (!id) return;
+    try {
+      chrome.runtime.sendMessage({ op: "addPoster", id, name }, () => {
+        void chrome.runtime.lastError;
+      });
+    } catch (e) {}
+  };
+
   window.__BAB_CS__ = NS;
 
   window.addEventListener("message", (event) => {
@@ -101,7 +123,7 @@
   try {
     chrome.runtime.onMessage.addListener((msg) => {
       if (!msg || msg.op !== "active") return;
-      apply(msg.active, msg.opts);
+      apply(msg.active, msg.opts, msg);
     });
   } catch (e) {}
 
@@ -109,7 +131,7 @@
     chrome.runtime.sendMessage({ op: "init" }, (res) => {
       if (chrome.runtime.lastError || !res) return;
       NS.host = res.host || NS.host;
-      apply(res.active, res.opts);
+      apply(res.active, res.opts, res);
     });
   } catch (e) {}
 })();

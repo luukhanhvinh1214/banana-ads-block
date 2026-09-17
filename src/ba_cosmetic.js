@@ -29,6 +29,14 @@
     '[class*="afs_ads"]',
     // TikTok. Bám data-e2e vì đó là móc test của chính TikTok, sống qua các
     // lượt build; tên lớp bên cạnh sinh lại mỗi lần.
+    //
+    // Hai nhãn khác hẳn nhau: "ad-tag" ("Được tài trợ") là quảng cáo TikTok
+    // bán, "sponsored-tag" ("Hợp tác có trả phí") là người đăng tự khai có nhận
+    // tiền. Bám mỗi cái sau là bỏ lọt toàn bộ quảng cáo thật.
+    'article:has([data-e2e="ad-tag"])',
+    '[data-e2e="recommend-list-item-container"]:has([data-e2e="ad-tag"])',
+    'article:has([data-e2e="ttam-ads-cta"])',
+    '[data-e2e="recommend-list-item-container"]:has([data-e2e="ttam-ads-cta"])',
     'article:has([data-e2e="sponsored-tag"])',
     '[data-e2e="recommend-list-item-container"]:has([data-e2e="sponsored-tag"])',
     '#player-ads',
@@ -140,6 +148,36 @@
   let scheduled = 0;
   let on = false;
   let banners = true;
+  let blockPosters = false;
+
+  // Chứa cả id lẫn tên hiển thị, đều hạ chữ thường. Facebook có chỗ chỉ đọc
+  // được tên, có chỗ chỉ đọc được id, nên khớp trúng bên nào cũng tính.
+  const blocked = new Set();
+  const announced = new Set();
+
+  const setBlocked = (list) => {
+    blocked.clear();
+    for (const p of list || []) {
+      if (p && p.id) blocked.add(String(p.id).toLowerCase());
+      if (p && p.name) blocked.add(String(p.name).toLowerCase());
+    }
+  };
+
+  const isBlockedWho = (who) => {
+    if (!who) return false;
+    if (who.id && blocked.has(who.id.toLowerCase())) return true;
+    return !!who.name && blocked.has(who.name.toLowerCase());
+  };
+
+  const rememberPoster = (who) => {
+    if (!blockPosters || !who || !who.id) return;
+    const key = who.id.toLowerCase();
+    if (announced.has(key)) return;
+    announced.add(key);
+    blocked.add(key);
+    if (who.name) blocked.add(who.name.toLowerCase());
+    CS.addPoster(who.id, who.name);
+  };
 
   const addStyle = () => {
     if (styleEl && styleEl.isConnected) return;
@@ -284,6 +322,7 @@
   // lượt build. Chỉ còn chữ trên nhãn, mà chữ đó có một ký tự U+200B dính ngay
   // sau và trim() không cắt nó, nên phải lọc ký tự vô hình trước khi so.
   const IS_FACEBOOK = /(^|\.)facebook\.com$/i.test(location.hostname);
+  const IS_TIKTOK = /(^|\.)tiktok\.com$/i.test(location.hostname);
 
   const FB_INVISIBLE = /[­​-‏⁠﻿]/g;
   const FB_LABELS = [
@@ -301,13 +340,52 @@
   const FB_REFS = '[aria-labelledby], [aria-describedby]';
   const FB_POST = '[aria-posinset]';
 
-  const isFbLabel = (raw) => {
-    const t = (raw || '').replace(FB_INVISIBLE, '').replace(/\s+/g, ' ').trim().toLowerCase();
-    if (!t || t.length > FB_LABEL_MAX) return false;
-    for (const label of FB_LABELS) {
-      if (t === label) return true;
+  // Chỉ dùng cho closest(), không dùng để duyệt: mỗi bình luận cũng là một
+  // role="article", quét hết chúng mỗi lượt thì lượt quét dài gấp mấy lần.
+  const FB_POST_BOX = '[aria-posinset], div[role="article"]';
+
+  // Nút ba chấm của khối tài trợ. Đây là móc chắc nhất trên Facebook: nhãn nhìn
+  // thấy thì họ xẻ nhỏ và xáo trộn được, còn chuỗi này thì không, vì trình đọc
+  // màn hình phải đọc ra được. Nó kèm luôn tên nhà quảng cáo.
+  const FB_MENU = '[role="button"][aria-label]';
+  const FB_MENU_TEXT = /nội dung được (?:tài trợ|quảng cáo)|sponsored content/i;
+
+  // Tiền tố tham lam để lấy lần xuất hiện CUỐI: nhãn tiếng Anh có "for" ở đầu
+  // câu, bắt trúng chỗ đó thì tên nhà quảng cáo thành cả vế sau.
+  const FB_MENU_NAME = /^(?:.*\s)?(?:của|by|from)\s+(.+)$/i;
+
+  const fbAdMenu = (root) => {
+    if (!root.querySelectorAll) return null;
+    for (const el of root.querySelectorAll(FB_MENU)) {
+      if (FB_MENU_TEXT.test(el.getAttribute('aria-label') || '')) return el;
     }
-    return false;
+    return null;
+  };
+
+  const fbMenuName = (el) => {
+    const label = (el.getAttribute('aria-label') || '').replace(/\s+/g, ' ').trim();
+    const m = FB_MENU_NAME.exec(label);
+    return m ? m[1].trim() : '';
+  };
+
+  // Chỉ hai nhãn đầu là tài khoản quảng cáo. Hai nhãn sau là người dùng thường
+  // gắn liên kết tiếp thị vào bài của họ: ẩn bài thì được, chặn cả người đăng
+  // vì một bài thì quá tay.
+  const FB_AD_LABELS = ['được tài trợ', 'sponsored'];
+
+  const fbLabelText = (raw) => {
+    const t = (raw || '').replace(FB_INVISIBLE, '').replace(/\s+/g, ' ').trim().toLowerCase();
+    return t.length > FB_LABEL_MAX ? '' : t;
+  };
+
+  const isFbLabel = (raw) => {
+    const t = fbLabelText(raw);
+    return !!t && FB_LABELS.indexOf(t) !== -1;
+  };
+
+  const isFbAdLabel = (raw) => {
+    const t = fbLabelText(raw);
+    return !!t && FB_AD_LABELS.indexOf(t) !== -1;
   };
 
   // Nhớ lại kết quả tra id để lượt sau khỏi đọc DOM lần nữa. Facebook đổi
@@ -358,7 +436,69 @@
   // và thoát hẳn thì không lượt quét nào sau đó bắt lại được.
   const FB_TEXT_MAX = 600;
 
+  // Tên hiển thị đổi được bất cứ lúc nào, id trong đường dẫn thì không, nên lấy
+  // id làm khoá và giữ tên chỉ để hiện trong popup.
+  const FB_NOT_PROFILE =
+    /^\/(?:photo|reel|reels|watch|stories|story\.php|permalink\.php|groups|events|marketplace|hashtag|media|pages|share|video|l\.php)/i;
+
+  const fbProfileId = (href) => {
+    let url;
+    try {
+      url = new URL(href, location.href);
+    } catch (e) {
+      return '';
+    }
+    if (!/(^|\.)facebook\.com$/i.test(url.hostname)) return '';
+    if (url.pathname === '/profile.php') return url.searchParams.get('id') || '';
+    if (FB_NOT_PROFILE.test(url.pathname)) return '';
+    const seg = url.pathname.split('/').filter(Boolean);
+    return seg.length === 1 ? seg[0] : '';
+  };
+
+  // Nhớ theo phần tử, không theo id: Facebook dựng lại vùng feed liên tục, mà
+  // mỗi lần tra lại là một lần duyệt hết liên kết đầu bài.
+  const fbAuthors = new WeakMap();
+  const FB_AUTHOR_LINKS = 24;
+  const FB_NAME_MAX = 80;
+
+  const fbAuthor = (post) => {
+    const cached = fbAuthors.get(post);
+    if (cached) return cached;
+
+    // Tên người đăng nằm trong thẻ tiêu đề đầu bài. Không có tiêu đề thì đành
+    // dò trong cả bài, nhưng chặn số liên kết để không quét hết bài dài.
+    const head = post.querySelector('h2, h3, h4');
+    const links = (head || post).querySelectorAll('a[href]');
+    let seen = 0;
+
+    for (const a of links) {
+      if (seen++ >= FB_AUTHOR_LINKS) break;
+      const id = fbProfileId(a.getAttribute('href'));
+      if (!id) continue;
+      const name = (a.innerText || a.textContent || '')
+        .replace(FB_INVISIBLE, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+      if (!name || name.length > FB_NAME_MAX) continue;
+      const who = { id, name };
+      fbAuthors.set(post, who);
+      return who;
+    }
+    return null;
+  };
+
+  // Bài quảng cáo có khi chưa dựng xong liên kết tên trang lúc bị bắt, nên lấy
+  // được tên từ nhãn nút ba chấm thì dùng luôn tên đó làm khoá.
+  const fbAdWho = (post, menu) => {
+    const who = fbAuthor(post);
+    if (who) return who;
+    const name = menu ? fbMenuName(menu) : '';
+    return name ? { id: name, name } : null;
+  };
+
   const fbPostIsAd = (post) => {
+    if (fbAdMenu(post)) return true;
+
     const walker = document.createTreeWalker(post, NodeFilter.SHOW_TEXT);
     let node;
     let seen = 0;
@@ -406,11 +546,37 @@
 
   // Ưu tiên khung [aria-posinset]: đó là ranh giới bài viết do chính Facebook
   // đánh dấu, chính xác hơn mọi phép leo cây.
+  // Nhãn hoa hồng cũng đủ để ẩn bài, nhưng không đủ để kết luận người đăng là
+  // tài khoản quảng cáo. Chỉ nút ba chấm của khối tài trợ và nhãn "Được tài
+  // trợ" mới nói được điều đó.
+  const fbIsAdvertiser = (box) => {
+    const menu = fbAdMenu(box);
+    if (menu) return menu;
+
+    const walker = document.createTreeWalker(box, NodeFilter.SHOW_TEXT);
+    let node;
+    let seen = 0;
+    while ((node = walker.nextNode()) && seen++ < FB_TEXT_MAX) {
+      if (isFbAdLabel(node.nodeValue)) return true;
+    }
+    return null;
+  };
+
+  // Ẩn và, khi người dùng đã bật, ghi tên nhà quảng cáo lại để lần sau chặn cả
+  // bài không mang nhãn của họ.
+  const fbHideAd = (box) => {
+    if (!box) return 0;
+    if (blockPosters) {
+      const proof = fbIsAdvertiser(box);
+      if (proof) rememberPoster(fbAdWho(box, proof === true ? null : proof));
+    }
+    return hide(box);
+  };
+
   const fbHideFrom = (el) => {
-    const post = el.closest(FB_POST);
-    if (post) return hide(post);
-    const box = fbAdBox(el);
-    return box ? hide(box) : 0;
+    const post = el.closest(FB_POST_BOX);
+    if (post) return fbHideAd(post);
+    return fbHideAd(fbAdBox(el));
   };
 
   // Nhãn ẩn và con trỏ trỏ tới nó không vào DOM cùng lúc, và thứ tự không cố
@@ -479,7 +645,9 @@
         if (posts.length) {
           for (const post of posts) {
             if (deep-- <= 0) break;
-            if (!post.hasAttribute(MARK) && fbPostIsAd(post)) n += hide(post);
+            if (post.hasAttribute(MARK)) continue;
+            if (fbPostIsAd(post)) n += fbHideAd(post);
+            else if (blockPosters && isBlockedWho(fbAuthor(post))) n += hide(post);
           }
           continue;
         }
@@ -502,12 +670,54 @@
 
     for (const post of root.querySelectorAll(FB_POST)) {
       if (post.hasAttribute(MARK)) continue;
-      if (fbPostIsAd(post)) n += hide(post);
+      if (fbPostIsAd(post)) n += fbHideAd(post);
+      else if (blockPosters && isBlockedWho(fbAuthor(post))) n += hide(post);
+    }
+
+    // Khối tài trợ cột phải không phải là bài viết nên không lọt vào vòng trên.
+    for (const menu of root.querySelectorAll(FB_MENU)) {
+      if (!FB_MENU_TEXT.test(menu.getAttribute('aria-label') || '')) continue;
+      n += fbHideFrom(menu);
     }
 
     for (const label of root.querySelectorAll('h3')) {
       if (!isFbLabel(label.textContent)) continue;
       n += fbHideFrom(label);
+    }
+
+    return n;
+  };
+
+  // TikTok dựng feed bằng cuộn dính: ẩn hẳn thẻ bài là video kế trượt lên thế
+  // chỗ, nên không cần lớp nào bấm nút bỏ qua.
+  const TT_AD = '[data-e2e="ad-tag"], [data-e2e="ttam-ads-cta"], [data-e2e="sponsored-tag"]';
+  const TT_ITEM = 'article, [data-e2e="recommend-list-item-container"]';
+
+  // Ẩn thì ẩn cả hai nhãn, nhưng chỉ ghi tên chủ của quảng cáo TikTok bán. Người
+  // sáng tạo nhận một hợp đồng tài trợ không phải tài khoản quảng cáo, chặn cả
+  // kênh của họ vì một video là quá tay.
+  const TT_AD_OWN = '[data-e2e="ad-tag"], [data-e2e="ttam-ads-cta"]';
+
+  const ttAuthor = (item) => {
+    const a = item.querySelector('a[href^="/@"]');
+    if (!a) return null;
+    const id = (a.getAttribute('href') || '').slice(2).split(/[/?#]/)[0];
+    return id ? { id, name: '@' + id } : null;
+  };
+
+  const scanTikTok = (root) => {
+    let n = 0;
+
+    for (const item of root.querySelectorAll(TT_ITEM)) {
+      if (item.hasAttribute(MARK)) continue;
+
+      if (item.querySelector(TT_AD)) {
+        if (item.querySelector(TT_AD_OWN)) rememberPoster(ttAuthor(item));
+        n += hide(item);
+        continue;
+      }
+
+      if (blockPosters && isBlockedWho(ttAuthor(item))) n += hide(item);
     }
 
     return n;
@@ -538,6 +748,7 @@
     }
 
     if (IS_FACEBOOK) n += scanFacebook(root);
+    if (IS_TIKTOK) n += scanTikTok(root);
 
     return n;
   };
@@ -599,6 +810,8 @@
 
   CS.onChange((active, opts) => {
     banners = opts.banners !== false;
+    blockPosters = !!CS.block;
+    setBlocked(CS.posters);
     if (active && opts.cosmetic !== false) start();
     else stop();
     if (on) schedule();

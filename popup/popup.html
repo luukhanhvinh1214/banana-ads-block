@@ -20,7 +20,7 @@
 
     <div class="title">
         <h1>Banana Ads Block</h1>
-        <span class="version">v0.6.1</span>
+        <span class="version">v0.7.0</span>
         <p class="tagline">Chặn quảng cáo, popup và bỏ qua quảng cáo video.</p>
     </div>
 
@@ -41,6 +41,23 @@
             <div class="site-host" id="site-host">—</div>
         </div>
         <button type="button" id="site-toggle" class="ghost">Bỏ qua trang này</button>
+    </div>
+
+    <div class="block" id="block" hidden>
+        <div class="block-head">
+            <div class="block-text">
+                <div class="block-title">Chặn tài khoản quảng cáo</div>
+                <div class="block-state" id="block-state">Đang tắt</div>
+            </div>
+            <button type="button" id="block-toggle" class="switch" role="switch" aria-checked="false"
+                aria-label="Bật hoặc tắt chặn tài khoản quảng cáo">
+                <span class="knob"></span>
+            </button>
+        </div>
+        <div class="block-foot">
+            <span id="block-count">Chưa chặn ai</span>
+            <button type="button" id="block-clear" class="link">Xoá danh sách</button>
+        </div>
     </div>
 
     <section>

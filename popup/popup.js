@@ -22,11 +22,21 @@ const powerState = $("power-state");
 const siteWrap = $("site");
 const siteHost = $("site-host");
 const siteBtn = $("site-toggle");
+const blockWrap = $("block");
+const blockBtn = $("block-toggle");
+const blockState = $("block-state");
+const blockCount = $("block-count");
+const blockClear = $("block-clear");
 
 const OPTS = ["cosmetic", "banners", "popup", "popunder", "video", "trackers"];
 
+const SITE_NAMES = { facebook: "Facebook", tiktok: "TikTok" };
+
 let host = "";
 let siteAllowed = false;
+let site = "";
+let blockOn = false;
+let posters = [];
 
 const renderPower = (on) => {
   powerBtn.setAttribute("aria-checked", on ? "true" : "false");
@@ -43,13 +53,34 @@ const renderSite = () => {
   siteBtn.textContent = siteAllowed ? "Bật lại cho trang này" : "Bỏ qua trang này";
 };
 
+// Nút này chỉ có nghĩa ở nơi đọc được tên nhà quảng cáo, nên trang khác thì
+// giấu hẳn thay vì hiện ra rồi khoá lại.
+const renderBlock = () => {
+  blockWrap.hidden = !site;
+  if (!site) return;
+  const where = SITE_NAMES[site] || site;
+  blockWrap.classList.toggle("on", blockOn);
+  blockBtn.setAttribute("aria-checked", blockOn ? "true" : "false");
+  blockState.textContent = blockOn
+    ? "Thấy ai đăng quảng cáo trên " + where + " là ẩn luôn mọi bài sau của họ"
+    : "Đang tắt — chỉ ẩn bài quảng cáo, không đụng tới người đăng";
+  blockCount.textContent = posters.length
+    ? "Đã chặn " + posters.length + " tài khoản"
+    : "Chưa chặn ai";
+  blockClear.hidden = !posters.length;
+};
+
 const load = async () => {
   const state = await send({ op: "state" });
   if (!state) return;
   host = state.host || "";
   siteAllowed = !!state.siteAllowed;
+  site = state.site || "";
+  blockOn = !!state.block;
+  posters = Array.isArray(state.posters) ? state.posters : [];
   renderPower(state.enabled);
   renderSite();
+  renderBlock();
   for (const name of OPTS) {
     $("opt-" + name).checked = state.opts[name] !== false;
   }
@@ -72,6 +103,22 @@ siteBtn.addEventListener("click", async () => {
   if (!res || !res.ok) return;
   siteAllowed = res.siteAllowed;
   renderSite();
+});
+
+blockBtn.addEventListener("click", async () => {
+  if (!site) return;
+  blockOn = !blockOn;
+  renderBlock();
+  await send({ op: "setBlock", site, value: blockOn });
+  load();
+});
+
+blockClear.addEventListener("click", async () => {
+  if (!site) return;
+  const res = await send({ op: "clearPosters", site });
+  if (!res || !res.ok) return;
+  posters = [];
+  renderBlock();
 });
 
 for (const name of OPTS) {

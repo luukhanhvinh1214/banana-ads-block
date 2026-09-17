@@ -8,6 +8,25 @@ const KEY_ENABLED = "bab_enabled";
 const KEY_ALLOWLIST = "bab_allowlist";
 const KEY_OPTS = "bab_opts";
 const KEY_STATS = "bab_stats";
+const KEY_BLOCK = "bab_block";
+const KEY_POSTERS = "bab_posters";
+
+// Hai trang có nhãn tài trợ riêng và có tên nhà quảng cáo đọc được, nên chặn
+// theo tài khoản mới làm được ở đây. Trang khác không có gì để bám.
+const SITES = {
+  facebook: /(^|\.)facebook\.com$/i,
+  tiktok: /(^|\.)tiktok\.com$/i,
+};
+
+const POSTER_MAX = 500;
+
+const siteOf = (host) => {
+  if (!host) return "";
+  for (const name of Object.keys(SITES)) {
+    if (SITES[name].test(host)) return name;
+  }
+  return "";
+};
 
 const DEFAULT_OPTS = {
   cosmetic: true,
@@ -25,15 +44,24 @@ const ALLOW_RULE_BASE = 900000;
 // tabId -> số lần chặn trong lần tải trang hiện tại.
 const tabHits = new Map();
 
+const asMap = (v) => (v && typeof v === "object" && !Array.isArray(v) ? v : {});
+
 const getState = async () => {
-  const res = await chrome.storage.local.get([KEY_ENABLED, KEY_ALLOWLIST, KEY_OPTS, KEY_STATS]);
+  const res = await chrome.storage.local.get([
+    KEY_ENABLED, KEY_ALLOWLIST, KEY_OPTS, KEY_STATS, KEY_BLOCK, KEY_POSTERS,
+  ]);
   return {
     enabled: res[KEY_ENABLED] !== false,
     allowlist: Array.isArray(res[KEY_ALLOWLIST]) ? res[KEY_ALLOWLIST] : [],
     opts: Object.assign({}, DEFAULT_OPTS, res[KEY_OPTS]),
     stats: Object.assign({}, DEFAULT_STATS, res[KEY_STATS]),
+    block: asMap(res[KEY_BLOCK]),
+    posters: asMap(res[KEY_POSTERS]),
   };
 };
+
+const postersOf = (state, site) =>
+  site && Array.isArray(state.posters[site]) ? state.posters[site] : [];
 
 const hostOf = (url) => {
   try {
@@ -110,9 +138,18 @@ const broadcast = async (state) => {
   }
   for (const tab of tabs) {
     if (!tab.id || !tab.url) continue;
-    const active = state.enabled && !inAllowlist(hostOf(tab.url), state.allowlist);
+    const host = hostOf(tab.url);
+    const active = state.enabled && !inAllowlist(host, state.allowlist);
+    const site = siteOf(host);
     chrome.tabs
-      .sendMessage(tab.id, { op: "active", active, opts: state.opts })
+      .sendMessage(tab.id, {
+        op: "active",
+        active,
+        opts: state.opts,
+        site,
+        block: !!state.block[site],
+        posters: postersOf(state, site),
+      })
       .catch(() => {
         // Tab chưa nạp content script (trang chrome://, cửa hàng tiện ích).
       });
@@ -185,11 +222,17 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   // cáo không tự biết nó đang nằm trên trang nào, chỗ duy nhất biết là đây.
   if (msg.op === "init") {
     const host = hostOf((sender.tab && sender.tab.url) || "");
+    // Trang mang nhãn tài trợ tính theo khung GỬI, không theo tab: iframe quảng
+    // cáo nhúng trong facebook.com không phải Facebook.
+    const site = siteOf(hostOf(sender.url || ""));
     getState().then((state) => {
       sendResponse({
         active: state.enabled && !inAllowlist(host, state.allowlist),
         opts: state.opts,
         host,
+        site,
+        block: !!state.block[site],
+        posters: postersOf(state, site),
       });
     });
     return true;
@@ -209,6 +252,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       ([state, tabs]) => {
         const tab = tabs[0];
         const host = hostOf((tab && tab.url) || "");
+        const site = siteOf(host);
         sendResponse({
           enabled: state.enabled,
           opts: state.opts,
@@ -216,6 +260,9 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           host,
           siteAllowed: inAllowlist(host, state.allowlist),
           tabHits: tab ? tabHits.get(tab.id) || 0 : 0,
+          site,
+          block: !!state.block[site],
+          posters: postersOf(state, site),
         });
       }
     );
@@ -250,6 +297,53 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       if (list.length === state.allowlist.length) list.push(host);
       chrome.storage.local.set({ [KEY_ALLOWLIST]: list }, () => {
         syncAll().then(() => sendResponse({ ok: true, siteAllowed: list.includes(host) }));
+      });
+    });
+    return true;
+  }
+
+  if (msg.op === "setBlock") {
+    const site = msg.site;
+    if (!SITES[site]) return;
+    getState().then((state) => {
+      const block = Object.assign({}, state.block, { [site]: msg.value !== false });
+      chrome.storage.local.set({ [KEY_BLOCK]: block }, () => {
+        syncAll().then(() => sendResponse({ ok: true, block: block[site] }));
+      });
+    });
+    return true;
+  }
+
+  // Tên nhà quảng cáo do content script gửi lên. Trang gửi tính theo khung gửi,
+  // không lấy theo lời khai trong thông điệp.
+  if (msg.op === "addPoster") {
+    const site = siteOf(hostOf(sender.url || ""));
+    const id = String(msg.id || "").slice(0, 120);
+    if (!site || !id) return;
+    getState().then((state) => {
+      if (!state.block[site]) return;
+      const list = postersOf(state, site);
+      const key = id.toLowerCase();
+      if (list.some((p) => String(p.id).toLowerCase() === key)) return;
+      const next = list.concat([{ id, name: String(msg.name || id).slice(0, 120) }]);
+      // Bỏ mục cũ nhất khi đầy. Danh sách chỉ lớn lên nên phải có trần.
+      const posters = Object.assign({}, state.posters, {
+        [site]: next.slice(Math.max(0, next.length - POSTER_MAX)),
+      });
+      chrome.storage.local.set({ [KEY_POSTERS]: posters }, () => {
+        getState().then(broadcast);
+      });
+    });
+    return;
+  }
+
+  if (msg.op === "clearPosters") {
+    const site = msg.site;
+    if (!SITES[site]) return;
+    getState().then((state) => {
+      const posters = Object.assign({}, state.posters, { [site]: [] });
+      chrome.storage.local.set({ [KEY_POSTERS]: posters }, () => {
+        syncAll().then(() => sendResponse({ ok: true, posters: [] }));
       });
     });
     return true;
