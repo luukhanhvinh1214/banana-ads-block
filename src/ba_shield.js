@@ -143,10 +143,15 @@
   // Miễn trừ theo LOẠI phần tử vừa bấm thì không dùng được: popunder phổ biến
   // nhất hiện nay gắn một handler lên mọi phần tử của trang, và giao diện trình
   // phát video thì gần như toàn là <button>. Chỉ còn ĐÍCH ĐẾN để phân biệt.
+
+  // Cửa sổ khai báo kích thước là cửa sổ trang cố ý dựng cho người dùng nhìn.
+  // Nhưng phải là kích thước thật: bộ popunder của AdCash gọi window.open với
+  // features "noopener,noreferrer", nên "có features" không thôi là cửa sau.
+  const SIZED = /\b(width|height|left|top|screenx|screeny|innerwidth|innerheight)\s*=\s*\d/i;
+
   const shouldBlock = (url, features) => {
     if (!guarding()) return false;
-    // Cửa sổ khai báo kích thước là cửa sổ trang cố ý dựng cho người dùng nhìn.
-    if (features && String(features).trim()) return false;
+    if (SIZED.test(features == null ? "" : String(features))) return false;
     if (Date.now() - lastClick > GESTURE_MS) return false;
     if (!url) return true;
     return unwanted(url);

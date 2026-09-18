@@ -137,6 +137,17 @@
 /apu.php
 /pfe/current/tag.min.js
 
+# ===== AdCash =====
+# Trang phim Việt nạp //acscdn.com/script/aclib.js rồi gọi aclib.runPop().
+# Thư viện đó tự kéo về bộ popunder và địa chỉ quảng cáo, nên chặn nó là cả
+# chuỗi đứt. Đường dẫn đứng yên qua các lần đổi tên miền, và bắt được cả trang
+# nào tự phát lại thư viện từ tên miền của chính mình.
+/script/aclib.js
+/script/suurl
+||acscdn.com^
+||adexchangerapid.com^
+||usrpubtrk.com^
+
 # ===== Popunder: hạ tầng cố định =====
 # Phần không đổi tên: máy chủ phát script và đầu mối đồng bộ.
 ||073m.com^
