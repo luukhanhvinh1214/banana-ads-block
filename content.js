@@ -9,7 +9,7 @@
   const adListeners = [];
 
   const NS = {
-    VERSION: "0.8.0",
+    VERSION: "0.8.1",
 
     // Bật sẵn để không bỏ lọt trong lúc chờ service worker trả lời. Trang trong
     // danh sách bỏ qua sẽ được thu dọn ở lượt apply() đầu tiên.

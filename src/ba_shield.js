@@ -186,6 +186,74 @@
     return !a.querySelector("img, picture, video, svg, canvas");
   };
 
+  // Tấm bắt click không phải lúc nào cũng là thẻ <a>. Loại gặp trên trang phim
+  // Việt là một <div> trong suốt phủ kín khung nhìn, z-index kịch trần, rỗng
+  // ruột, nuốt cú bấm đầu tiên rồi mở tab quảng cáo — nó không có href nên mọi
+  // đường nhận dạng theo liên kết đều trượt.
+  //
+  // Nhận bằng hình dạng: to gần bằng khung nhìn, nổi lên trên, nền trong suốt,
+  // không một đứa con nào, không một chữ nào. Lớp phủ thật của trang gần như
+  // luôn có ít nhất một trong ba thứ đó.
+  const isBlankCatcher = (el) => {
+    if (!el || el.nodeType !== 1) return false;
+    if (el.tagName === "A" || el.tagName === "IFRAME") return false;
+    if (el.childElementCount > 0) return false;
+    if ((el.textContent || "").trim()) return false;
+    let style;
+    try {
+      style = getComputedStyle(el);
+    } catch (e) {
+      return false;
+    }
+    if (style.position !== "fixed" && style.position !== "absolute") return false;
+    if (style.pointerEvents === "none") return false;
+    if (style.backgroundImage !== "none") return false;
+    const alpha = /rgba\([^)]*,\s*0\s*\)/.test(style.backgroundColor);
+    if (!alpha && style.backgroundColor !== "transparent") return false;
+    if (!(Number(style.zIndex) >= 1000)) return false;
+    const rect = el.getBoundingClientRect();
+    return rect.width >= innerWidth * 0.6 && rect.height >= innerHeight * 0.6;
+  };
+
+  // Gỡ bằng pointer-events thay vì xoá: xoá thì mã của trang dựng lại ngay, còn
+  // cú bấm đi xuyên qua được thì người dùng vẫn bấm trúng trình phát bên dưới.
+  const defuse = (el) => {
+    if (!guarding() || !isBlankCatcher(el)) return false;
+    try {
+      el.style.setProperty("pointer-events", "none", "important");
+    } catch (e) {
+      return false;
+    }
+    NS.popBlocked++;
+    NS.post("popunder", 1);
+    NS.log("gỡ tấm bắt click:", el.tagName + (el.id ? "#" + el.id : ""));
+    return true;
+  };
+
+  // Gỡ ngay lúc nó được chèn vào thì cú bấm đầu tiên của người dùng đã đi thẳng
+  // xuống trình phát. Chỉ soi nút vừa thêm và các con trực tiếp của nó, vì loại
+  // này luôn nằm ngay dưới body.
+  const watchCatchers = () => {
+    if (typeof MutationObserver !== "function") return;
+    const xet = (node) => {
+      if (!node || node.nodeType !== 1) return;
+      defuse(node);
+      for (let i = 0; i < node.children.length; i++) defuse(node.children[i]);
+    };
+    const quanSat = new MutationObserver((ds) => {
+      if (!guarding()) return;
+      for (const d of ds) for (const n of d.addedNodes) xet(n);
+    });
+    const batDau = () => {
+      try {
+        quanSat.observe(document.documentElement, { childList: true, subtree: true });
+      } catch (e) {}
+      if (document.body) xet(document.body);
+    };
+    if (document.documentElement) batDau();
+    else document.addEventListener("DOMContentLoaded", batDau, { once: true });
+  };
+
   // Kiểu popunder thứ ba: nghe pointerdown rồi viết lại href của một liên kết
   // thật, để chính cú bấm của người dùng mở sang trang quảng cáo. Chụp lại địa
   // chỉ lúc đặt tay xuống, trả lại lúc nhả ra nếu nó đã bị đánh tráo.
@@ -223,6 +291,15 @@
       }
     } else {
       arm(a);
+    }
+
+    // Lưới thứ hai cho tấm bắt click dạng div: nếu nó vừa được chèn mà bộ theo
+    // dõi chưa kịp gỡ, nuốt luôn cú bấm này. Mất một cú bấm còn hơn mở ra một
+    // tab cờ bạc; cú sau đã đi xuyên qua được.
+    if (defuse(event.target)) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
     }
 
     lastClick = Date.now();
@@ -297,6 +374,9 @@
   };
 
   NS.popBlocked = 0;
+  // Sau khi đặt bộ đếm về 0, vì bộ theo dõi soi body ngay lần đầu và có thể
+  // tăng bộ đếm trước cả dòng này.
+  watchCatchers();
   harden(window);
 
   // Vá window.open của realm hiện tại là CHƯA ĐỦ. Cách né phổ biến là tạo một
