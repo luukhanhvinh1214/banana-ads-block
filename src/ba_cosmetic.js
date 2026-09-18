@@ -116,12 +116,19 @@
   ];
 
   // Mạng quảng cáo đổi tên miền liên tục, nhưng tên id của khung thì cố định.
+  //
+  // Chặn ở tầng mạng xong thì khung vẫn nằm đó, rỗng nhưng còn chiếm chỗ: đo
+  // trên kenh14.vn thấy 6 khung admicro để lại 2611px khoảng trống. Vào đây thì
+  // hideWrapper leo lên gỡ luôn thẻ bọc, nên khoảng trống xẹp theo.
   const AD_FRAME_ID = [
     '[id*="clb-spot"]',
     '[id^="google_ads_iframe"]',
     '[id^="aswift_"]',
     '[id^="ad-frame"]',
     '[id^="adframe"]',
+    '[id^="adnzone"]',
+    '[id^="ias-adnzone"]',
+    '[id^="admzone"]',
   ].join(',');
 
   // Cỡ chuẩn IAB. Nhúng thật không bao giờ rơi đúng vào bảng cỡ quảng cáo.

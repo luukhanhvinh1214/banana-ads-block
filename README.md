@@ -16,6 +16,8 @@ Mọi thứ chạy trên máy bạn, an toàn, bảo mật, không thu thập l�
 - Đóng popup chèn ngang, kể cả popup khuyến mãi của chính trang, và mở lại thanh
   cuộn bị khoá.
 - Ngăn trang tự mở tab quảng cáo khi bạn bấm vào chỗ bất kỳ.
+- Giữ lại tab bạn đang xem khi trang định ném nội dung thật sang tab mới rồi
+  biến tab cũ thành quảng cáo.
 - Bỏ qua quảng cáo video trên YouTube — chặn được thì chặn, không chặn được thì
   tua nhanh.
 

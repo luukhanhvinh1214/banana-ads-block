@@ -173,6 +173,61 @@
     return unwanted(form.action) ? form : null;
   };
 
+  // Kiểu cướp tab: người dùng bấm một liên kết nội bộ, trang mở ĐÚNG liên kết đó
+  // sang tab mới rồi đẩy tab đang xem sang quảng cáo. Tab mới trông như trang
+  // thật nên người dùng tưởng mình bấm đúng, còn quảng cáo nằm lại phía sau.
+  //
+  // Hai phép thử cũ đều trượt: đích của window.open cùng tên miền nên không có
+  // gì "lạ" để chặn, và cú đẩy đi viết bằng window.location — thuộc tính đó
+  // configurable=false nên không vá được, đo trên onflix.lat ngày 2026-09-18.
+  //
+  // Chỗ duy nhất còn can thiệp được là huỷ chính cú điều hướng ấy.
+  const TABUNDER_MS = 1000;
+
+  let leaving = null;
+  let tabUnderTimer = 0;
+
+  const disarmTabUnder = () => {
+    if (!leaving) return;
+    window.removeEventListener("beforeunload", leaving, true);
+    window.removeEventListener("pagehide", leaving, true);
+    leaving = null;
+    clearTimeout(tabUnderTimer);
+  };
+
+  // Trang tự mở chính nó sang tab mới, ngay trong lúc người dùng bấm một liên
+  // kết nội bộ. Không có lý do lành nào để làm vậy: trình duyệt tự mở liên kết
+  // được, trang không cần giành việc đó.
+  const tabUnderSwap = (url) => {
+    if (!guarding() || !url) return false;
+    if (Date.now() - lastClick > GESTURE_MS) return false;
+    if (!clickedLinkHost || !NS.sameSite(clickedLinkHost)) return false;
+    const host = hostOf(url);
+    return !!host && NS.sameSite(host);
+  };
+
+  const watchTabUnder = () => {
+    disarmTabUnder();
+    leaving = () => {
+      // window.stop() đợi hết nhịp hiện tại rồi mới gọi. Đo được: gọi như vậy
+      // thì cú điều hướng vừa bắt đầu bị huỷ và tài liệu đang xem sống tiếp.
+      setTimeout(() => {
+        try {
+          window.stop();
+        } catch (e) {}
+      }, 0);
+      NS.popBlocked++;
+      NS.post("popunder", 1);
+      NS.log("giữ lại tab đang xem, không cho đẩy sang quảng cáo");
+      disarmTabUnder();
+    };
+    window.addEventListener("beforeunload", leaving, true);
+    window.addEventListener("pagehide", leaving, true);
+    // Cửa sổ canh hẹp, vì sau khi hết canh thì mọi cú điều hướng đều là của
+    // người dùng và huỷ nhầm là làm liệt nút bấm của họ.
+    tabUnderTimer = setTimeout(disarmTabUnder, TABUNDER_MS);
+  };
+
   // Tấm bắt click: một thẻ <a target="_blank"> trong suốt phủ gần kín màn hình,
   // bấm chỗ nào cũng trúng. Nhận bằng hình dạng, vì nó không có gì khác để nhận:
   // to bằng màn hình, nổi lên trên, rỗng ruột.
@@ -367,10 +422,17 @@
       if (win.__babHardened) return;
       if (typeof win.open !== "function") return;
       win.__babHardened = true;
+      // Lớp canh cướp tab chỉ đặt cho khung này. Realm của iframe mượn bản vá
+      // của khung cha, mà huỷ điều hướng của cha vì một cú open trong iframe
+      // thì sai chỗ.
+      const khungNay = win === window;
       win.open = wrap(win.open, (target, thisArg, args) => {
-        if (!shouldBlock(args[0], args[2])) return Reflect.apply(target, thisArg, args);
-        noteBlocked(args[0]);
-        return null;
+        if (shouldBlock(args[0], args[2])) {
+          noteBlocked(args[0]);
+          return null;
+        }
+        if (khungNay && tabUnderSwap(args[0])) watchTabUnder();
+        return Reflect.apply(target, thisArg, args);
       });
       hardenActivation(win);
     } catch (e) {

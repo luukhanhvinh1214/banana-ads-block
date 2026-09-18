@@ -332,15 +332,18 @@
     schedule();
   };
 
+  // Đóng rồi thì để nó đóng. Chỗ này từng trả lại display cho mọi lớp phủ đã
+  // diệt, nên vừa tắt tiện ích là chúng bật lại ngay giữa màn hình: người dùng
+  // tắt để xem trang cho tử tế, không phải để xin lại quảng cáo. Ngoài ra
+  // kill() đã bấm nút đóng của chính quảng cáo, mà cú bấm đó thì không trả lại
+  // được, nên trả lại display chỉ làm nửa vời.
+  //
+  // Muốn trang y như bản gốc thì tải lại trang: không có gì được ghi xuống đĩa.
   const stop = () => {
     on = false;
     queue = [];
     if (observer) observer.disconnect();
     observer = null;
-    for (const el of document.querySelectorAll('[' + MARK + ']')) {
-      el.removeAttribute(MARK);
-      el.style.removeProperty('display');
-    }
   };
 
   CS.onChange((active, opts) => {
