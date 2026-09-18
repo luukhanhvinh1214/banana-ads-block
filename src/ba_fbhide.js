@@ -14,11 +14,22 @@
   const CS = window.__BAB_CS__;
   if (!CS || CS.fbhide) return;
   if (!/(^|\.)facebook\.com$/i.test(location.hostname)) return;
-  if (!/^\/ads\/advertisers/.test(location.pathname)) return;
+  // Facebook đưa trang này về "/ads" rồi dựng tiếp bằng JS; đường cũ
+  // "/ads/advertisers" vẫn vào được nhưng bị đổi URL ngay sau đó. Khoá chặt vào
+  // đường cũ là lớp này im lặng không chạy nữa. Tiêu đề danh sách mới là thứ
+  // quyết định có việc để làm hay không.
+  if (!/^\/ads(\/|$)/.test(location.pathname)) return;
 
   const HIDE = /^ẩn quảng cáo$/i;
   const DONE = /bạn đã ẩn quảng cáo của họ|you hid their ads/i;
   const HIDE_EN = /^hide ads$/i;
+
+  // Cùng trang còn một danh sách "Chủ đề quảng cáo" cũng dựng bằng
+  // role="listitem", cũng mở ra bảng có h2 đúng bằng tên hàng. Tên chủ đề như
+  // "Son môi" hay "Phần mềm & ứng dụng" trông y hệt tên nhà quảng cáo, nhưng
+  // bảng của nó chỉ có "Tùy ý" / "Ẩn bớt" và không ẩn được ai.
+  const LIST_HEAD =
+    /nhà quảng cáo mà bạn đã từng xem quảng cáo|advertisers you've seen ads from/i;
 
   // Giãn nhịp giữa hai lần bấm. Bấm liên tục thì Facebook coi là máy và chặn
   // luôn thao tác, hỏng đúng thứ đang cần làm.
@@ -54,6 +65,54 @@
     return '';
   };
 
+  const headOf = (el) =>
+    clean((el.querySelector('h1, h2, h3, [role="heading"]') || {}).textContent || '');
+
+  // Neo theo tiêu đề rồi lấy các hàng cùng khối, thay vì quét phẳng cả trang.
+  // Không tìm thấy tiêu đề thì trả rỗng: thà bỏ một lượt còn hơn bấm nhầm sang
+  // danh sách khác.
+  //
+  // "Xem tất cả" mở một role="dialog" dựng danh sách đầy đủ ở nhánh DOM khác,
+  // không nằm dưới tiêu đề ngoài trang, nên phải tìm trong hộp thoại trước.
+  // Ngoài trang chỉ có ba hàng xem trước.
+  const advertiserRows = () => {
+    for (const dlg of document.querySelectorAll('[role="dialog"]')) {
+      if (!LIST_HEAD.test(headOf(dlg))) continue;
+      const rows = [...dlg.querySelectorAll('[role="listitem"]')];
+      if (rows.length) return rows;
+    }
+    const heads = [...document.querySelectorAll('h2, h3, [role="heading"]')].filter((h) =>
+      LIST_HEAD.test(clean(h.textContent))
+    );
+    for (const head of heads) {
+      let node = head;
+      for (let up = 0; up < 8 && node; up++) {
+        node = node.parentElement;
+        if (!node) break;
+        const rows = [...node.querySelectorAll('[role="listitem"]')];
+        if (rows.length) return rows;
+      }
+    }
+    return [];
+  };
+
+  // Trả trang về danh sách, đừng để người dùng quay lại thấy một bảng chi tiết
+  // tự mở ra mà họ không bấm. KeyboardEvent dựng bằng mã không đóng được bảng
+  // này: nó thiếu isTrusted và React ở đây bỏ qua. Nút đóng thật thì ăn.
+  //
+  // Hộp thoại danh sách cũng có nút đóng của riêng nó và đứng trước trong DOM.
+  // Bấm nhầm nút đó là mất luôn danh sách, vòng lặp dừng ngay sau hàng đầu, nên
+  // chỉ bấm nút nằm trong bảng chi tiết.
+  const closePanel = () => {
+    for (const b of document.querySelectorAll('[role="button"]')) {
+      if (!/^(đóng|close)$/i.test(b.getAttribute('aria-label') || '')) continue;
+      const dlg = b.closest('[role="dialog"]');
+      if (dlg && LIST_HEAD.test(headOf(dlg))) continue;
+      b.click();
+      return;
+    }
+  };
+
   const hideButton = () => {
     for (const b of document.querySelectorAll('[role="button"]')) {
       const t = clean(b.innerText);
@@ -86,8 +145,11 @@
       // đường những nhà quảng cáo phía sau, nên bỏ qua sau vài lần thử.
       const tries = new Map();
 
-      for (let pass = 0; pass < PER_VISIT; pass++) {
-        const row = [...document.querySelectorAll('[role="listitem"]')].find((r) => {
+      // Đếm số lần ẩn được, không đếm số vòng lặp. Mở nhầm một bảng không có
+      // nút ẩn thì không có lý do gì để nó ăn mất suất của nhà quảng cáo sau.
+      let hidden = 0;
+      for (let pass = 0; hidden < PER_VISIT && pass < PER_VISIT * 2; pass++) {
+        const row = advertiserRows().find((r) => {
           if (DONE.test(r.innerText || '')) return false;
           const name = rowName(r).toLowerCase();
           if (!name || done.has(name) || !names.has(name)) return false;
@@ -109,19 +171,23 @@
 
         // Chỉ ghi "đã xong" khi thật sự bấm được. Ghi trước rồi hụt một nhịp là
         // nhà quảng cáo đó không bao giờ được thử lại nữa.
-        if (!(await panelReady(name))) continue;
+        if (!(await panelReady(name))) {
+          closePanel();
+          continue;
+        }
         const btn = hideButton();
-        if (!btn) continue;
+        if (!btn) {
+          closePanel();
+          continue;
+        }
         btn.click();
         done.add(name);
+        hidden++;
         await wait(GAP_MS);
+        closePanel();
       }
 
-      // Trả trang về danh sách, đừng để người dùng quay lại thấy một bảng chi
-      // tiết tự mở ra mà họ không bấm.
-      document.dispatchEvent(
-        new KeyboardEvent('keydown', { key: 'Escape', keyCode: 27, bubbles: true })
-      );
+      closePanel();
     } finally {
       running = false;
     }
