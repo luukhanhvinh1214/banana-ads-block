@@ -21,6 +21,7 @@ mcp-server/
 test/
 .mcp.json
 CLAUDE.md
+.agents/
 
 # Logs
 *.log

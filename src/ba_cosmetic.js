@@ -27,18 +27,9 @@
     '[id*="catfix" i]',
     '[class*="catfix" i]',
     '[class*="afs_ads"]',
-    // TikTok. Bám data-e2e vì đó là móc test của chính TikTok, sống qua các
-    // lượt build; tên lớp bên cạnh sinh lại mỗi lần.
-    //
-    // Hai nhãn khác hẳn nhau: "ad-tag" ("Được tài trợ") là quảng cáo TikTok
-    // bán, "sponsored-tag" ("Hợp tác có trả phí") là người đăng tự khai có nhận
-    // tiền. Bám mỗi cái sau là bỏ lọt toàn bộ quảng cáo thật.
-    'article:has([data-e2e="ad-tag"])',
-    '[data-e2e="recommend-list-item-container"]:has([data-e2e="ad-tag"])',
-    'article:has([data-e2e="ttam-ads-cta"])',
-    '[data-e2e="recommend-list-item-container"]:has([data-e2e="ttam-ads-cta"])',
-    'article:has([data-e2e="sponsored-tag"])',
-    '[data-e2e="recommend-list-item-container"]:has([data-e2e="sponsored-tag"])',
+    // TikTok: chỉ ẩn nút bấm quảng cáo con, không ẩn thẻ bài cha vì sẽ làm
+    // sụp chiều cao thẻ trong danh sách cuộn dính của TikTok.
+    '[data-e2e="ttam-ads-cta"]',
     '#player-ads',
     '#masthead-ad',
     'ytd-promoted-sparkles-web-renderer',
@@ -707,15 +698,15 @@
     return n;
   };
 
-  // TikTok dựng feed bằng cuộn dính: ẩn hẳn thẻ bài là video kế trượt lên thế
-  // chỗ, nên không cần lớp nào bấm nút bỏ qua.
+  // TikTok dựng feed bằng cuộn dính: ẩn thẻ bài bằng display:none làm sụp chiều
+  // cao thẻ về 0 và hỏng tính toán offsetTop của TikTok, dẫn tới lỗi giật
+  // ngược video khi cuộn.
+  // Thay vào đó: giữ nguyên chiều cao thẻ, tắt tiếng, giấu nhãn quảng cáo và
+  // tự động bỏ qua sang video kế tiếp theo đúng hướng cuộn.
   const TT_AD = '[data-e2e="ad-tag"], [data-e2e="ttam-ads-cta"], [data-e2e="sponsored-tag"]';
   const TT_ITEM = 'article, [data-e2e="recommend-list-item-container"]';
-
-  // Ẩn thì ẩn cả hai nhãn, nhưng chỉ ghi tên chủ của quảng cáo TikTok bán. Người
-  // sáng tạo nhận một hợp đồng tài trợ không phải tài khoản quảng cáo, chặn cả
-  // kênh của họ vì một video là quá tay.
   const TT_AD_OWN = '[data-e2e="ad-tag"], [data-e2e="ttam-ads-cta"]';
+  const TT_MARK = 'data-bab-tt-ad';
 
   const ttAuthor = (item) => {
     const a = item.querySelector('a[href^="/@"]');
@@ -724,21 +715,81 @@
     return id ? { id, name: '@' + id } : null;
   };
 
+  let ttLastScrollTop = 0;
+  let ttScrollDirection = 'down';
+  let ttSkipping = false;
+  let ttSkipTimer = 0;
+
+  const ttContainer = () =>
+    document.querySelector('[class*="DivColumnListContainer"]');
+
+  const ttSkip = (direction) => {
+    if (ttSkipping) return;
+    ttSkipping = true;
+    const btnSelector = direction === 'up'
+      ? '[data-e2e="feed-navigation-prev"]'
+      : '[data-e2e="feed-navigation-next"]';
+    const btn = document.querySelector(btnSelector);
+    if (btn && !btn.disabled) {
+      btn.click();
+    } else {
+      const key = direction === 'up' ? 'ArrowUp' : 'ArrowDown';
+      const keyCode = direction === 'up' ? 38 : 40;
+      window.dispatchEvent(new KeyboardEvent('keydown', { key, keyCode, code: key, bubbles: true }));
+    }
+    clearTimeout(ttSkipTimer);
+    ttSkipTimer = setTimeout(() => { ttSkipping = false; }, 400);
+  };
+
+  const checkTikTokFeed = () => {
+    if (!on || !IS_TIKTOK || ttSkipping) return;
+    const c = ttContainer();
+    if (!c) return;
+
+    const st = c.scrollTop;
+    if (st > ttLastScrollTop) ttScrollDirection = 'down';
+    else if (st < ttLastScrollTop) ttScrollDirection = 'up';
+    ttLastScrollTop = st;
+
+    for (const item of c.querySelectorAll('[' + TT_MARK + ']')) {
+      const rect = item.getBoundingClientRect();
+      if (rect.top < innerHeight * 0.5 && rect.bottom > innerHeight * 0.5) {
+        const v = item.querySelector('video');
+        if (v) {
+          v.muted = true;
+          try { v.pause(); } catch (e) {}
+        }
+        ttSkip(ttScrollDirection);
+        break;
+      }
+    }
+  };
+
   const scanTikTok = (root) => {
     let n = 0;
 
     for (const item of root.querySelectorAll(TT_ITEM)) {
-      if (item.hasAttribute(MARK)) continue;
+      if (item.hasAttribute(TT_MARK)) continue;
 
-      if (item.querySelector(TT_AD)) {
+      const isAd = item.querySelector(TT_AD);
+      const isBlocked = blockPosters && isBlockedWho(ttAuthor(item));
+
+      if (isAd || isBlocked) {
+        item.setAttribute(TT_MARK, '1');
         if (item.querySelector(TT_AD_OWN)) rememberPoster(ttAuthor(item));
-        n += hide(item);
-        continue;
+        const v = item.querySelector('video');
+        if (v) {
+          v.muted = true;
+          try { v.pause(); } catch (e) {}
+        }
+        for (const tag of item.querySelectorAll(TT_AD)) {
+          tag.style.setProperty('display', 'none', 'important');
+        }
+        n++;
       }
-
-      if (blockPosters && isBlockedWho(ttAuthor(item))) n += hide(item);
     }
 
+    checkTikTokFeed();
     return n;
   };
 
@@ -809,6 +860,9 @@
       observer.observe(document.documentElement, opts);
     };
     attach();
+    if (IS_TIKTOK) {
+      document.addEventListener('scroll', checkTikTokFeed, { capture: true, passive: true });
+    }
     schedule();
   };
 
@@ -817,6 +871,14 @@
     removeStyle();
     if (observer) observer.disconnect();
     observer = null;
+    if (IS_TIKTOK) {
+      document.removeEventListener('scroll', checkTikTokFeed, true);
+      clearTimeout(ttSkipTimer);
+      ttSkipping = false;
+      for (const el of document.querySelectorAll('[' + TT_MARK + ']')) {
+        el.removeAttribute(TT_MARK);
+      }
+    }
     for (const el of document.querySelectorAll('[' + MARK + ']')) {
       el.removeAttribute(MARK);
       el.style.removeProperty('display');
