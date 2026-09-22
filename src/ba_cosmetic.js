@@ -702,11 +702,12 @@
   // cao thẻ về 0 và hỏng tính toán offsetTop của TikTok, dẫn tới lỗi giật
   // ngược video khi cuộn.
   // Thay vào đó: giữ nguyên chiều cao thẻ, tắt tiếng, giấu nhãn quảng cáo và
-  // tự động bỏ qua sang video kế tiếp theo đúng hướng cuộn.
+  // tự động bỏ qua sang video kế tiếp khi người dùng cuộn xuống.
   const TT_AD = '[data-e2e="ad-tag"], [data-e2e="ttam-ads-cta"], [data-e2e="sponsored-tag"]';
   const TT_ITEM = 'article, [data-e2e="recommend-list-item-container"]';
   const TT_AD_OWN = '[data-e2e="ad-tag"], [data-e2e="ttam-ads-cta"]';
   const TT_MARK = 'data-bab-tt-ad';
+  const TT_SKIPPED = 'data-bab-tt-skipped';
 
   const ttAuthor = (item) => {
     const a = item.querySelector('a[href^="/@"]');
@@ -716,29 +717,52 @@
   };
 
   let ttLastScrollTop = 0;
-  let ttScrollDirection = 'down';
   let ttSkipping = false;
   let ttSkipTimer = 0;
 
   const ttContainer = () =>
     document.querySelector('[class*="DivColumnListContainer"]');
 
-  const ttSkip = (direction) => {
+  const ttSkipNext = (item) => {
     if (ttSkipping) return;
     ttSkipping = true;
-    const btnSelector = direction === 'up'
-      ? '[data-e2e="feed-navigation-prev"]'
-      : '[data-e2e="feed-navigation-next"]';
-    const btn = document.querySelector(btnSelector);
-    if (btn && !btn.disabled) {
-      btn.click();
-    } else {
-      const key = direction === 'up' ? 'ArrowUp' : 'ArrowDown';
-      const keyCode = direction === 'up' ? 38 : 40;
-      window.dispatchEvent(new KeyboardEvent('keydown', { key, keyCode, code: key, bubbles: true }));
-    }
-    clearTimeout(ttSkipTimer);
-    ttSkipTimer = setTimeout(() => { ttSkipping = false; }, 400);
+    if (item) item.setAttribute(TT_SKIPPED, '1');
+
+    const advance = () => {
+      const btn = document.querySelector('[data-e2e="feed-navigation-next"]');
+      if (btn && !btn.disabled) {
+        btn.click();
+      } else {
+        window.dispatchEvent(new KeyboardEvent('keydown', {
+          key: 'ArrowDown',
+          keyCode: 40,
+          code: 'ArrowDown',
+          bubbles: true
+        }));
+      }
+    };
+
+    advance();
+
+    // TikTok có thể đang trong hiệu ứng chuyển động và tạm thời bỏ qua nhấp đầu tiên.
+    // Thử lại mỗi 40ms cho tới khi thẻ quảng cáo thực sự bị cuộn qua khỏi tầm mắt.
+    let retries = 0;
+    clearInterval(ttSkipTimer);
+    ttSkipTimer = setInterval(() => {
+      retries++;
+      if (!item || !item.isConnected || retries > 20) {
+        clearInterval(ttSkipTimer);
+        ttSkipping = false;
+        return;
+      }
+      const r = item.getBoundingClientRect();
+      if (r.top < -50 || r.top > innerHeight * 0.7) {
+        clearInterval(ttSkipTimer);
+        setTimeout(() => { ttSkipping = false; }, 200);
+        return;
+      }
+      advance();
+    }, 40);
   };
 
   const checkTikTokFeed = () => {
@@ -747,19 +771,25 @@
     if (!c) return;
 
     const st = c.scrollTop;
-    if (st > ttLastScrollTop) ttScrollDirection = 'down';
-    else if (st < ttLastScrollTop) ttScrollDirection = 'up';
+    const scrollingDown = st > ttLastScrollTop + 2;
     ttLastScrollTop = st;
 
+    // Chỉ tự động bỏ qua khi người dùng đang cuộn XUỐNG.
+    // Khi cuộn NGƯỢC LÊN để xem lại video hoặc xem quảng cáo, tuyệt đối không can thiệp.
+    if (!scrollingDown) return;
+
     for (const item of c.querySelectorAll('[' + TT_MARK + ']')) {
+      if (item.hasAttribute(TT_SKIPPED)) continue;
       const rect = item.getBoundingClientRect();
-      if (rect.top < innerHeight * 0.5 && rect.bottom > innerHeight * 0.5) {
+      // Kích hoạt khi thẻ quảng cáo tiến vào tầm nhìn từ dưới lên,
+      // giúp chuyển tiếp mượt mà sang video tiếp theo mà không bị khựng/giật.
+      if (rect.top <= innerHeight * 0.65 && rect.bottom >= innerHeight * 0.15) {
         const v = item.querySelector('video');
         if (v) {
           v.muted = true;
           try { v.pause(); } catch (e) {}
         }
-        ttSkip(ttScrollDirection);
+        ttSkipNext(item);
         break;
       }
     }
@@ -789,7 +819,6 @@
       }
     }
 
-    checkTikTokFeed();
     return n;
   };
 
@@ -873,10 +902,14 @@
     observer = null;
     if (IS_TIKTOK) {
       document.removeEventListener('scroll', checkTikTokFeed, true);
+      clearInterval(ttSkipTimer);
       clearTimeout(ttSkipTimer);
       ttSkipping = false;
       for (const el of document.querySelectorAll('[' + TT_MARK + ']')) {
         el.removeAttribute(TT_MARK);
+      }
+      for (const el of document.querySelectorAll('[' + TT_SKIPPED + ']')) {
+        el.removeAttribute(TT_SKIPPED);
       }
     }
     for (const el of document.querySelectorAll('[' + MARK + ']')) {
