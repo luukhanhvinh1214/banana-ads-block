@@ -724,6 +724,7 @@
   let ttLastDirection = 'down';
   let ttSkipping = false;
   let ttSkipTimer = 0;
+  let ttSettleTimer = 0;
   let ttFastScanTimer = 0;
 
   const ttContainer = () =>
@@ -738,63 +739,101 @@
     }
   };
 
-  // Thẻ đang chiếm giữa khung nhìn. Giữa lúc TikTok cuộn sang thẻ khác thì không
-  // thẻ nào thoả, nên đây cũng là dấu hiệu cú bấm trước đã ăn.
-  const ttCentered = (item) => {
-    const r = item.getBoundingClientRect();
-    return r.top < innerHeight * 0.45 && r.bottom > innerHeight * 0.55;
+  // Thẻ đã đứng yên đúng vào khung nhìn. Thẻ cao bằng khung và dính theo mép
+  // trên, nên lúc nghỉ nó trùng mép trên của khung; đo được cú dính lệch nhiều
+  // nhất 4px nên 8px là đủ rộng.
+  //
+  // Đây là điều kiện then chốt của cả lớp này. Bấm "tiếp" giữa lúc feed còn
+  // chạy là bấm khi TikTok chưa kịp cập nhật số thứ tự thẻ đang xem, và nó sẽ
+  // kéo màn hình về chỗ cũ: người dùng cuộn xuống thì bị đẩy ngược lên, cuộn
+  // lên thì bị đẩy xuống.
+  const TT_SETTLED_PX = 8;
+
+  const ttSettled = (item) => {
+    const c = ttContainer();
+    if (!c) return false;
+    return Math.abs(item.getBoundingClientRect().top - c.getBoundingClientRect().top) <= TT_SETTLED_PX;
   };
 
-  const ttAdvance = () => {
+  const ttAdvance = (item) => {
     const btn = document.querySelector('[data-e2e="feed-navigation-next"]');
     if (btn && !btn.disabled) {
       btn.click();
       return;
     }
-    // Khung hẹp thì TikTok không vẽ nút điều hướng. Danh sách cuộn dính bắt
-    // buộc, nên một cú đẩy nhỏ đủ để trình duyệt nhảy sang mốc dính kế tiếp.
+    // Khung hẹp thì TikTok không vẽ nút điều hướng. Nhắm thẳng mốc dính của thẻ
+    // kế tiếp: đẩy một quãng tương đối thì cuộn dính bắt buộc kéo về mốc GẦN
+    // NHẤT, mà mốc gần nhất nhiều khi là thẻ vừa rời đi.
     const c = ttContainer();
-    if (c) c.scrollBy({ top: 1, behavior: 'smooth' });
+    const next = item.nextElementSibling;
+    if (!c || !next) return;
+    const dy = next.getBoundingClientRect().top - c.getBoundingClientRect().top;
+    c.scrollTo({ top: c.scrollTop + dy, behavior: 'smooth' });
   };
 
+  // Chờ feed đứng hẳn rồi mới quyết định bỏ qua. Cuộn dính của TikTok kéo dài
+  // tới 700ms; trong quãng đó mọi phép đo vị trí đều là đo một thứ đang chạy.
+  const TT_SETTLE_MS = 120;
   const TT_TICK_MS = 100;
-  // TikTok cuộn sang thẻ kế tiếp hết khoảng 350ms. Bấm lại thưa hơn quãng đó,
-  // nếu không cú thứ hai rơi vào giữa chuyển động và đẩy vượt thêm một thẻ.
-  const TT_CLICK_EVERY = 5;
-  const TT_TRIES = 6;
+  // Chỉ bấm lại khi thẻ vẫn nằm im, tức cú bấm trước không ăn gì. Cách nhau một
+  // giây cho dài hơn trọn vòng cuộn của TikTok.
+  const TT_CLICK_EVERY = 10;
+  const TT_TRIES = 4;
 
   const ttSkipNext = (item) => {
     if (ttSkipping || !item) return;
     ttSkipping = true;
     ttMuteItem(item);
-    ttAdvance();
+    ttAdvance(item);
 
     let ticks = 0;
     let tries = 1;
     clearInterval(ttSkipTimer);
     ttSkipTimer = setInterval(() => {
-      const gone = !item.isConnected || !ttCentered(item);
-      if (gone || tries > TT_TRIES) {
+      // Thẻ vừa nhúc nhích nghĩa là cú bấm đã ăn. Buông ngay: đeo tiếp là tranh
+      // vô lăng với người dùng đang cuộn.
+      if (!item.isConnected || !ttSettled(item) || tries > TT_TRIES) {
         clearInterval(ttSkipTimer);
         ttSkipTimer = 0;
         // Chỉ đánh dấu khi đã thôi đeo bám thẻ này. Đánh dấu ngay lúc bấm như
         // trước thì một cú bấm trượt là thẻ đó hết cơ hội được bỏ qua.
         item.setAttribute(TT_SKIPPED, '1');
         ttSkipping = false;
-        // Hai quảng cáo liền nhau: cái sau đã vào giữa khung từ lúc còn bận, mà
-        // lúc đó không còn sự kiện cuộn nào nữa để đánh thức.
-        if (gone) checkTikTokFeed();
         return;
       }
       if (++ticks % TT_CLICK_EVERY === 0) {
         tries++;
-        ttAdvance();
+        ttAdvance(item);
       }
     }, TT_TICK_MS);
   };
 
+  // Chỉ chạy khi feed đã đứng yên. Mọi quyết định đổi vị trí cuộn đều nằm ở đây.
   const checkTikTokFeed = () => {
     if (!on || !IS_TIKTOK || ttSkipping) return;
+    // Khi người dùng chủ động cuộn ngược lên, giữ nguyên vị trí xem, không can thiệp
+    if (ttLastDirection === 'up') return;
+    const c = ttContainer();
+    if (!c) return;
+
+    for (const item of c.querySelectorAll('[' + TT_MARK + ']')) {
+      if (item.hasAttribute(TT_SKIPPED)) continue;
+      if (ttSettled(item)) {
+        ttSkipNext(item);
+        break;
+      }
+    }
+  };
+
+  const ttScheduleCheck = () => {
+    clearTimeout(ttSettleTimer);
+    ttSettleTimer = setTimeout(checkTikTokFeed, TT_SETTLE_MS);
+  };
+
+  // Mỗi lượt cuộn chỉ làm những việc không đụng tới vị trí cuộn; phần bỏ qua
+  // đẩy sang lúc feed dừng hẳn.
+  const onTikTokScroll = () => {
+    if (!on) return;
     const c = ttContainer();
     if (!c) return;
 
@@ -808,16 +847,7 @@
       }
     }
 
-    // Khi người dùng chủ động cuộn ngược lên, giữ nguyên vị trí xem, không can thiệp
-    if (ttLastDirection === 'up') return;
-
-    for (const item of c.querySelectorAll('[' + TT_MARK + ']')) {
-      if (item.hasAttribute(TT_SKIPPED)) continue;
-      if (ttCentered(item)) {
-        ttSkipNext(item);
-        break;
-      }
-    }
+    ttScheduleCheck();
   };
 
   // Hướng duyệt chỉ đọc từ thao tác của người dùng, không suy từ scrollTop:
@@ -866,10 +896,9 @@
         ttMuteItem(item);
         n++;
 
-        // Nếu thẻ quảng cáo vừa phát hiện đã nằm ngay chính giữa màn hình, bỏ qua ngay
-        if (!item.hasAttribute(TT_SKIPPED) && ttLastDirection !== 'up' && ttCentered(item)) {
-          ttSkipNext(item);
-        }
+        // Thẻ vừa lộ ra có thể đang là thẻ người dùng xem. Để lượt kiểm tra lúc
+        // feed đứng yên quyết định, đừng bỏ qua ngay giữa lúc còn cuộn.
+        if (!item.hasAttribute(TT_SKIPPED)) ttScheduleCheck();
       }
     }
 
@@ -958,7 +987,7 @@
     };
     attach();
     if (IS_TIKTOK) {
-      document.addEventListener('scroll', checkTikTokFeed, { capture: true, passive: true });
+      document.addEventListener('scroll', onTikTokScroll, { capture: true, passive: true });
       document.addEventListener('keydown', onTikTokKey, { capture: true, passive: true });
       document.addEventListener('click', onTikTokClick, { capture: true, passive: true });
       document.addEventListener('wheel', onTikTokWheel, { capture: true, passive: true });
@@ -972,12 +1001,14 @@
     if (observer) observer.disconnect();
     observer = null;
     if (IS_TIKTOK) {
-      document.removeEventListener('scroll', checkTikTokFeed, true);
+      document.removeEventListener('scroll', onTikTokScroll, true);
       document.removeEventListener('keydown', onTikTokKey, true);
       document.removeEventListener('click', onTikTokClick, true);
       document.removeEventListener('wheel', onTikTokWheel, true);
       clearInterval(ttSkipTimer);
       ttSkipTimer = 0;
+      clearTimeout(ttSettleTimer);
+      ttSettleTimer = 0;
       cancelAnimationFrame(ttFastScanTimer);
       ttFastScanTimer = 0;
       ttSkipping = false;
