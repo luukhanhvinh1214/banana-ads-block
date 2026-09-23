@@ -27,11 +27,6 @@
     '[id*="catfix" i]',
     '[class*="catfix" i]',
     '[class*="afs_ads"]',
-    // TikTok: chỉ ẩn nút bấm và nhãn quảng cáo con, không ẩn thẻ bài cha vì
-    // sẽ làm sụp chiều cao thẻ trong danh sách cuộn dính của TikTok.
-    '[data-e2e="ttam-ads-cta"]',
-    '[data-e2e="ad-tag"]',
-    '[data-e2e="sponsored-tag"]',
     '#player-ads',
     '#masthead-ad',
     'ytd-promoted-sparkles-web-renderer',
@@ -196,7 +191,12 @@
     const root = document.documentElement;
     if (!root) return;
     styleEl = document.createElement('style');
-    styleEl.textContent = SELECTORS.join(',\n') + '{display:none!important}';
+    let css = SELECTORS.join(',\n') + '{display:none!important}';
+    // display:none làm xẹp thẻ bài TikTok: đo được 788px tụt còn 724px, và một
+    // thẻ thấp hơn khung nhìn thì mốc cuộn dính lệch theo, video không còn nằm
+    // giữa khung. visibility giấu chữ mà giữ nguyên chỗ nó chiếm.
+    if (IS_TIKTOK) css += '\n' + TT_TAG + '{visibility:hidden!important}';
+    styleEl.textContent = css;
     root.appendChild(styleEl);
   };
 
@@ -706,6 +706,9 @@
   // Thay vào đó: giữ nguyên chiều cao thẻ, tắt tiếng, giấu nhãn quảng cáo và
   // tự động bỏ qua sang video kế tiếp khi người dùng duyệt xuống.
   const TT_AD = '[data-e2e="ad-tag"], [data-e2e="ttam-ads-cta"], [data-e2e="sponsored-tag"], [data-e2e="feed-ad"], a[href*="ads.tiktok.com"]';
+  // Chỉ ba nhãn con này mới được giấu. TT_AD còn bắt cả thẻ bọc, giấu nó đi là
+  // mất luôn khung video.
+  const TT_TAG = '[data-e2e="ad-tag"], [data-e2e="sponsored-tag"], [data-e2e="ttam-ads-cta"]';
   const TT_ITEM = 'article, [data-e2e="recommend-list-item-container"]';
   const TT_AD_OWN = '[data-e2e="ad-tag"], [data-e2e="ttam-ads-cta"]';
   const TT_MARK = 'data-bab-tt-ad';
@@ -718,7 +721,6 @@
     return id ? { id, name: '@' + id } : null;
   };
 
-  let ttLastScrollTop = 0;
   let ttLastDirection = 'down';
   let ttSkipping = false;
   let ttSkipTimer = 0;
@@ -736,69 +738,59 @@
     }
   };
 
+  // Thẻ đang chiếm giữa khung nhìn. Giữa lúc TikTok cuộn sang thẻ khác thì không
+  // thẻ nào thoả, nên đây cũng là dấu hiệu cú bấm trước đã ăn.
+  const ttCentered = (item) => {
+    const r = item.getBoundingClientRect();
+    return r.top < innerHeight * 0.45 && r.bottom > innerHeight * 0.55;
+  };
+
+  const ttAdvance = () => {
+    const btn = document.querySelector('[data-e2e="feed-navigation-next"]');
+    if (btn && !btn.disabled) {
+      btn.click();
+      return;
+    }
+    // Khung hẹp thì TikTok không vẽ nút điều hướng. Danh sách cuộn dính bắt
+    // buộc, nên một cú đẩy nhỏ đủ để trình duyệt nhảy sang mốc dính kế tiếp.
+    const c = ttContainer();
+    if (c) c.scrollBy({ top: 1, behavior: 'smooth' });
+  };
+
+  const TT_TICK_MS = 100;
+  // TikTok cuộn sang thẻ kế tiếp hết khoảng 350ms. Bấm lại thưa hơn quãng đó,
+  // nếu không cú thứ hai rơi vào giữa chuyển động và đẩy vượt thêm một thẻ.
+  const TT_CLICK_EVERY = 5;
+  const TT_TRIES = 6;
+
   const ttSkipNext = (item) => {
-    if (ttSkipping) return;
+    if (ttSkipping || !item) return;
     ttSkipping = true;
-    if (item) item.setAttribute(TT_SKIPPED, '1');
     ttMuteItem(item);
+    ttAdvance();
 
-    const advance = () => {
-      const btn = document.querySelector('[data-e2e="feed-navigation-next"]');
-      if (btn) {
-        if (!btn.disabled) {
-          btn.click();
-          return true;
-        }
-        return false;
-      }
-      window.dispatchEvent(new KeyboardEvent('keydown', {
-        key: 'ArrowDown',
-        keyCode: 40,
-        code: 'ArrowDown',
-        bubbles: true
-      }));
-      return true;
-    };
-
-    let clicked = advance();
-    let retries = 0;
-    let lastTop = item ? item.getBoundingClientRect().top : 0;
-    let stillStuckCount = 0;
-
-    // TikTok có thể đang trong chuyển động cuộn trước và tạm thời khóa nút next.
-    // Thử lại mỗi 40ms cho tới khi nút mở khóa và thẻ quảng cáo thực sự bị cuộn trôi qua.
+    let ticks = 0;
+    let tries = 1;
     clearInterval(ttSkipTimer);
     ttSkipTimer = setInterval(() => {
-      retries++;
-      if (!item || !item.isConnected || retries > 25) {
+      const gone = !item.isConnected || !ttCentered(item);
+      if (gone || tries > TT_TRIES) {
         clearInterval(ttSkipTimer);
+        ttSkipTimer = 0;
+        // Chỉ đánh dấu khi đã thôi đeo bám thẻ này. Đánh dấu ngay lúc bấm như
+        // trước thì một cú bấm trượt là thẻ đó hết cơ hội được bỏ qua.
+        item.setAttribute(TT_SKIPPED, '1');
         ttSkipping = false;
+        // Hai quảng cáo liền nhau: cái sau đã vào giữa khung từ lúc còn bận, mà
+        // lúc đó không còn sự kiện cuộn nào nữa để đánh thức.
+        if (gone) checkTikTokFeed();
         return;
       }
-      const r = item.getBoundingClientRect();
-      if (r.top < -50 || r.top > innerHeight * 0.7) {
-        clearInterval(ttSkipTimer);
-        setTimeout(() => {
-          ttSkipping = false;
-          if (on && IS_TIKTOK) checkTikTokFeed();
-        }, 150);
-        return;
+      if (++ticks % TT_CLICK_EVERY === 0) {
+        tries++;
+        ttAdvance();
       }
-      if (!clicked) {
-        clicked = advance();
-      } else {
-        if (Math.abs(r.top - lastTop) < 2) {
-          stillStuckCount++;
-          if (stillStuckCount >= 3) {
-            stillStuckCount = 0;
-            advance();
-          }
-        } else {
-          lastTop = r.top;
-          stillStuckCount = 0;
-        }
-      }
-    }, 40);
+    }, TT_TICK_MS);
   };
 
   const checkTikTokFeed = () => {
@@ -806,15 +798,6 @@
     const c = ttContainer();
     if (!c) return;
 
-    const st = c.scrollTop;
-    if (st > ttLastScrollTop + 2) {
-      ttLastDirection = 'down';
-    } else if (st < ttLastScrollTop - 2) {
-      ttLastDirection = 'up';
-    }
-    ttLastScrollTop = st;
-
-    // Quét để cập nhật các thẻ bài mới vào DOM
     scanTikTok(document);
 
     // Tắt tiếng video quảng cáo khi vừa chớm vào tầm nhìn
@@ -830,16 +813,16 @@
 
     for (const item of c.querySelectorAll('[' + TT_MARK + ']')) {
       if (item.hasAttribute(TT_SKIPPED)) continue;
-      const rect = item.getBoundingClientRect();
-      // Kích hoạt khi thẻ quảng cáo đã vào vùng quan sát trung tâm,
-      // đảm bảo chuyển động cuộn trước đó đã hoàn tất và không bị tranh chấp vị trí.
-      if (rect.top < innerHeight * 0.45 && rect.bottom > innerHeight * 0.55) {
+      if (ttCentered(item)) {
         ttSkipNext(item);
         break;
       }
     }
   };
 
+  // Hướng duyệt chỉ đọc từ thao tác của người dùng, không suy từ scrollTop:
+  // cuộn dính của TikTok nảy ngược vài pixel lúc dừng, đo được 3944 rồi 3941,
+  // và bấy nhiêu đủ để bị hiểu nhầm là người dùng đang cuộn lên.
   const onTikTokKey = (e) => {
     if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === 'j') {
       ttLastDirection = 'down';
@@ -881,17 +864,11 @@
         item.setAttribute(TT_MARK, '1');
         if (item.querySelector(TT_AD_OWN)) rememberPoster(ttAuthor(item));
         ttMuteItem(item);
-        for (const tag of item.querySelectorAll(TT_AD)) {
-          tag.style.setProperty('display', 'none', 'important');
-        }
         n++;
 
         // Nếu thẻ quảng cáo vừa phát hiện đã nằm ngay chính giữa màn hình, bỏ qua ngay
-        if (!item.hasAttribute(TT_SKIPPED) && ttLastDirection !== 'up') {
-          const rect = item.getBoundingClientRect();
-          if (rect.top < innerHeight * 0.45 && rect.bottom > innerHeight * 0.55) {
-            ttSkipNext(item);
-          }
+        if (!item.hasAttribute(TT_SKIPPED) && ttLastDirection !== 'up' && ttCentered(item)) {
+          ttSkipNext(item);
         }
       }
     }
@@ -1000,12 +977,10 @@
       document.removeEventListener('click', onTikTokClick, true);
       document.removeEventListener('wheel', onTikTokWheel, true);
       clearInterval(ttSkipTimer);
-      clearTimeout(ttSkipTimer);
+      ttSkipTimer = 0;
       cancelAnimationFrame(ttFastScanTimer);
       ttFastScanTimer = 0;
       ttSkipping = false;
-      const c = ttContainer();
-      if (c && c.style) c.style.removeProperty('scroll-snap-type');
       for (const el of document.querySelectorAll('[' + TT_MARK + ']')) {
         el.removeAttribute(TT_MARK);
       }
