@@ -27,8 +27,6 @@
     '[id*="catfix" i]',
     '[class*="catfix" i]',
     '[class*="afs_ads"]',
-    '#player-ads',
-    '#masthead-ad',
     'ytd-promoted-sparkles-web-renderer',
     'ytd-promoted-video-renderer',
     'ytd-display-ad-renderer',
@@ -71,6 +69,10 @@
     '[class^="ads-"]',
     '[class*=" ads-"]',
     '[id^="ad_info"]',
+    // YouTube dựng div#player-ads rỗng rồi đo display (bộ dò e.h_);
+    // #masthead-ad nằm trong một chuỗi mồi khác của nó.
+    '#player-ads',
+    '#masthead-ad',
   ];
 
   const SELECTORS = HARD.concat(BAIT_PRONE.map((s) => s + HAS_REAL_AD));
@@ -703,7 +705,7 @@
   // TikTok dựng feed bằng cuộn dính: ẩn thẻ bài bằng display:none làm sụp chiều
   // cao thẻ về 0 và hỏng tính toán offsetTop của TikTok, dẫn tới lỗi giật
   // ngược video khi cuộn.
-  // Thay vào đó: giữ nguyên chiều cao thẻ, tắt tiếng, giấu nhãn quảng cáo và
+  // Thay vào đó: giữ nguyên chiều cao thẻ, dừng video, giấu nhãn quảng cáo và
   // tự động bỏ qua sang video kế tiếp khi người dùng duyệt xuống.
   const TT_AD = '[data-e2e="ad-tag"], [data-e2e="ttam-ads-cta"], [data-e2e="sponsored-tag"], [data-e2e="feed-ad"], a[href*="ads.tiktok.com"]';
   // Chỉ ba nhãn con này mới được giấu. TT_AD còn bắt cả thẻ bọc, giấu nó đi là
@@ -731,10 +733,13 @@
     document.querySelector('[class*="DivColumnListContainer"]') ||
     document.querySelector('[data-e2e="feed-container"]');
 
-  const ttMuteItem = (item) => {
+  // Chỉ dừng, không tắt tiếng. TikTok chép muted của video đang phát sang mọi
+  // video sau đó (currentProps.muted trong trình quản lý trình phát), nên tắt
+  // tiếng quảng cáo đúng lúc nó vừa được chọn là tắt tiếng cả feed. Tắt tiếng
+  // cũng không giữ im được lâu: TikTok đặt lại muted mỗi lần chọn video mới.
+  const ttPauseItem = (item) => {
     const v = item ? item.querySelector('video') : null;
     if (v) {
-      v.muted = true;
       try { v.pause(); } catch (e) {}
     }
   };
@@ -783,7 +788,7 @@
   const ttSkipNext = (item) => {
     if (ttSkipping || !item) return;
     ttSkipping = true;
-    ttMuteItem(item);
+    ttPauseItem(item);
     ttAdvance(item);
 
     let ticks = 0;
@@ -839,11 +844,10 @@
 
     scanTikTok(document);
 
-    // Tắt tiếng video quảng cáo khi vừa chớm vào tầm nhìn
     for (const item of c.querySelectorAll('[' + TT_MARK + ']')) {
       const rect = item.getBoundingClientRect();
       if (rect.top <= innerHeight * 0.9 && rect.bottom >= innerHeight * 0.1) {
-        ttMuteItem(item);
+        ttPauseItem(item);
       }
     }
 
@@ -893,7 +897,7 @@
       if (isAd || isBlocked) {
         item.setAttribute(TT_MARK, '1');
         if (item.querySelector(TT_AD_OWN)) rememberPoster(ttAuthor(item));
-        ttMuteItem(item);
+        ttPauseItem(item);
         n++;
 
         // Thẻ vừa lộ ra có thể đang là thẻ người dùng xem. Để lượt kiểm tra lúc

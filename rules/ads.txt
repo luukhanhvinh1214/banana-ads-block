@@ -21,6 +21,18 @@
 ||googletagservices.com/tag/js/gpt.js => /surrogates/gpt.js
 ||pagead2.googlesyndication.com/pagead/show_ads.js => /surrogates/noop.js
 ||pagead2.googlesyndication.com/pagead/managed/js/adsense => /surrogates/noop.js
+# YouTube nạp tệp này rồi hỏi "google_ad_status" in window. Tệp thật chỉ đặt
+# biến đó, và src/ba_shield.js đã đặt sẵn. Chặn thẳng thì onload không chạy và
+# DCLKSTAT gửi lên máy chủ mang một giá trị máy thường không bao giờ có.
+||static.doubleclick.net/instream/ad_status.js => /surrogates/noop.js
+
+# ===== Cho qua =====
+# Cú pháp "@@urlFilter$domain=..." cho qua khi trang gửi thuộc các tên miền đó.
+#
+# YouTube xin mã biscotti ở đây và coi mọi lần xin hỏng là trình chặn quảng
+# cáo (bộ dò b.f_, ghi vào CATSTAT). Không giả được: nó đòi một mã hợp lệ, mà
+# trả về một mã giả dùng chung thì chính mã đó thành dấu vân tay.
+@@||googleads.g.doubleclick.net/pagead/id$domain=youtube.com
 
 # ===== Google / DoubleClick =====
 ||doubleclick.net^

@@ -22,6 +22,11 @@
   const prunePlayer = (node) => {
     let n = 0;
     if (!isObj(node)) return n;
+    // get_watch trả về một mảng [{playerResponse}, {watchNextResponse}].
+    if (Array.isArray(node)) {
+      for (const item of node) n += prunePlayer(item);
+      return n;
+    }
     for (const key of NS.PLAYER_AD_KEYS) {
       if (node[key] !== undefined) {
         delete node[key];
@@ -88,21 +93,68 @@
   const wrap = (target, apply) => new Proxy(target, { apply });
 
   const origParse = JSON.parse;
-  JSON.parse = wrap(origParse, (target, thisArg, args) => {
-    const out = Reflect.apply(target, thisArg, args);
-    if (!NS.enabled) return out;
-    const raw = args[0];
-    if (typeof raw === "string" && !MARKER.test(raw)) return out;
-    return pruneAll(out);
-  });
-  NS.hooked.push("JSON.parse");
 
-  if (window.Response && Response.prototype && Response.prototype.json) {
-    const origJson = Response.prototype.json;
-    Response.prototype.json = wrap(origJson, (target, thisArg, args) =>
-      Reflect.apply(target, thisArg, args).then((out) => pruneAll(out))
-    );
-    NS.hooked.push("Response.json");
+  // Trang chính www.youtube.com tự kiểm JSON.parse: đưa vào một mẫu có
+  // adPlacements rồi so với bản gốc, lệch là ghi "phát hiện" vào CATSTAT gửi
+  // lên máy chủ. Mẫu gồm cả một phản hồi giả sinh ngẫu nhiên, nên ở tầng này
+  // không phân biệt được. Trang /embed/ không chạy bộ kiểm đó.
+  const selfChecks = location.hostname === "www.youtube.com" && !location.pathname.startsWith("/embed/");
+
+  if (!selfChecks) {
+    JSON.parse = wrap(origParse, (target, thisArg, args) => {
+      const out = Reflect.apply(target, thisArg, args);
+      if (!NS.enabled) return out;
+      const raw = args[0];
+      if (typeof raw === "string" && !MARKER.test(raw)) return out;
+      return pruneAll(out);
+    });
+    NS.hooked.push("JSON.parse");
+  }
+
+  // Cắt ở tầng mạng, theo URL thật của yêu cầu. Không hook Response.json vì
+  // YouTube thử cả new Response(mẫu).json(). Nó còn thử một Request tới data:
+  // gắn url giả là /youtubei/v1/player, nên URL phải đọc qua getter gốc.
+  const API = /^https:\/\/[a-z]+\.youtube\.com\/youtubei\/v1\/(?:player|get_watch|next|browse|search|reel)/;
+  const requestUrl = window.Request && Object.getOwnPropertyDescriptor(Request.prototype, "url").get;
+
+  const isApi = (input) => {
+    try {
+      const raw = input instanceof Request ? requestUrl.call(input) : String(input);
+      return API.test(new URL(raw, location.href).href);
+    } catch (e) {
+      return false;
+    }
+  };
+
+  // Trả về Response mới chứ không sửa cái cũ: get_watch được đọc dần qua
+  // response.body rồi JSON.parse từng phần, nên chỉ thay được cả thân.
+  const pruneResponse = async (res) => {
+    try {
+      const text = await res.clone().text();
+      if (!MARKER.test(text)) return res;
+      const out = new Response(JSON.stringify(pruneAll(origParse(text))), {
+        status: res.status,
+        statusText: res.statusText,
+        headers: res.headers,
+      });
+      Object.defineProperties(out, {
+        url: { value: res.url },
+        type: { value: res.type },
+        redirected: { value: res.redirected },
+      });
+      return out;
+    } catch (e) {
+      return res;
+    }
+  };
+
+  if (typeof window.fetch === "function" && requestUrl) {
+    window.fetch = wrap(window.fetch, (target, thisArg, args) => {
+      const pending = Reflect.apply(target, thisArg, args);
+      if (!NS.enabled || !isApi(args[0])) return pending;
+      return pending.then(pruneResponse);
+    });
+    NS.hooked.push("fetch");
   }
 
   // Lần tải trang đầu không đi qua fetch: YouTube nhúng thẳng dữ liệu vào một
