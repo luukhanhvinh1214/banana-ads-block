@@ -42,9 +42,7 @@ let posters = [];
 const renderPower = (on) => {
   powerBtn.setAttribute("aria-checked", on ? "true" : "false");
   powerWrap.classList.toggle("off", !on);
-  powerState.textContent = on
-    ? "Đang bật — quảng cáo bị chặn trên mọi trang, trừ những trang bạn đã bỏ qua"
-    : "Đã tắt — mọi lớp chặn ngừng hoạt động, trang hiển thị như khi không có tiện ích";
+  powerState.textContent = on ? "Đang bật" : "Đã tắt";
 };
 
 const renderSite = () => {

@@ -74,6 +74,31 @@
     return false;
   };
 
+  // Lớp phủ thì phải đè lên một thứ gì đó. Coda dựng cả ứng dụng trong một div
+  // fixed phủ kín màn hình, bên dưới chỉ còn body: tài liệu trống thì ít chữ mà
+  // vẫn có ảnh đại diện và liên kết sang coda.io, đủ hình dạng một banner, và
+  // ẩn nó là trắng cả trang. Dò chín điểm trải sát mép: trang rút gọn link chỉ
+  // cao 99px, điểm dò ở một phần tư chiều cao đã rơi vào chỗ trống bên dưới.
+  const PROBE_AT = [0.05, 0.5, 0.95];
+
+  const coversSomething = (el, rect) => {
+    const left = Math.max(rect.left, 0);
+    const top = Math.max(rect.top, 0);
+    const width = Math.min(rect.right, innerWidth) - left;
+    const height = Math.min(rect.bottom, innerHeight) - top;
+    for (const fx of PROBE_AT) {
+      for (const fy of PROBE_AT) {
+        const stack = document.elementsFromPoint(left + width * fx, top + height * fy);
+        const at = stack.indexOf(el);
+        if (at === -1) return true;
+        for (let i = at + 1; i < stack.length; i++) {
+          if (!stack[i].contains(el) && !el.contains(stack[i])) return true;
+        }
+      }
+    }
+    return false;
+  };
+
   const isOverlay = (el) => {
     let style;
     try {
@@ -89,9 +114,9 @@
 
     const coversViewport =
       rect.width >= innerWidth * 0.6 && rect.height >= innerHeight * 0.5;
-    const floatsHigh = (parseInt(style.zIndex, 10) || 0) >= 100;
+    if (coversViewport) return coversSomething(el, rect);
 
-    return coversViewport || floatsHigh;
+    return (parseInt(style.zIndex, 10) || 0) >= 100;
   };
 
   // Dải dính màn hình do trang tự phục vụ ảnh: không có gì để chặn ở tầng mạng
