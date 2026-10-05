@@ -10,7 +10,7 @@
   const SECOND_LEVEL = /^(?:com|net|org|edu|gov|ac|co|or|ne|go|mil|int|biz|info|name|pro|health)$/;
 
   const NS = {
-    VERSION: "0.9.9",
+    VERSION: "0.9.10",
 
     // Mặc định bật để không bỏ lọt trong lúc chờ storage. ISOLATED world ghi đè
     // ngay khi đọc xong.
